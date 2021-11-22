@@ -1,5 +1,6 @@
 package com.sicnu.raftsimu.core.command;
 
+import com.sicnu.raftsimu.core.RaftSimulator;
 import lombok.Data;
 
 /**
@@ -19,6 +20,7 @@ import lombok.Data;
  */
 @Data
 public abstract class Command {
+    protected RaftSimulator simulator;
     protected long timeStamp;
     protected CommandType type;
 
@@ -26,13 +28,23 @@ public abstract class Command {
 
     }
 
-    public Command(long timeStamp, CommandType type) {
+    public Command(RaftSimulator simulator, long timeStamp, CommandType type) {
         this.timeStamp = timeStamp;
         this.type = type;
+        this.simulator = simulator;
     }
 
+    public abstract void work();
+
+    /**
+     * Command类型
+     * 有三个地方是耦合的：
+     * 第一个是此处的CommandType
+     * 第二个是 CommandTranslator 中的 构造函数
+     * 第三个是 CommandTranslator 中的 parse()
+     */
     public enum CommandType {
-        NODE_ADD, NODE_DEL, NODE_BOOT, NODE_SHUT, RAFT_ELECT, RAFT_BEAT, RAFT_OP
+        NODE_ADD, NODE_DEL, NODE_BOOT, NODE_SHUT, RAFT_ELECT, RAFT_BEAT, RAFT_OP, NET_INIT, NET_SEND
     }
 
 }

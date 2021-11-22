@@ -5,6 +5,7 @@ import com.sicnu.raftsimu.core.event.Event;
 import com.sicnu.raftsimu.core.event.EventManager;
 import com.sicnu.raftsimu.core.event.TransmissionEvent;
 import com.sicnu.raftsimu.core.event.trans.TransmissionManager;
+import com.sicnu.raftsimu.core.mote.MoteManager;
 import com.sicnu.raftsimu.ui.CommandTranslator;
 import lombok.Data;
 
@@ -20,13 +21,27 @@ public class RaftSimulator {
     long time = 0;
     //传输记录器 用来记录每个节点的邻居节点信息
     TransmissionManager transmissionManager;
+    //节点管理器 管理结点的存储
+    MoteManager moteManager;
     //事件管理器 用来快速驱动事件的推动
     EventManager eventManager;
 
 
-    public RaftSimulator(CommandTranslator translator) {
-        transmissionManager = new TransmissionManager();
-        eventManager = new EventManager();
+    /**
+     * 初始化Manager
+     */
+    public RaftSimulator() {
+        transmissionManager = new TransmissionManager(this);
+        eventManager = new EventManager(this);
+        moteManager = new MoteManager(this);
+    }
+
+    /**
+     * 装备翻译器，将翻译器得出的指令装备上
+     *
+     * @param translator 翻译器
+     */
+    public void analysis(CommandTranslator translator) {
         Deque<Command> commands = translator.getCommands();
         eventManager.analysis(commands);
     }

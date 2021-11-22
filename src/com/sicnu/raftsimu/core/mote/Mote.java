@@ -6,7 +6,6 @@ import com.sicnu.raftsimu.core.event.trans.TransmissionManager;
 import com.sicnu.raftsimu.core.event.trans.TransmissionPacket;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -70,7 +69,7 @@ public abstract class Mote {
             Mote mote = neighbor.getMote();
             //无论该节点的ip和端口信息是否满足 数据包的目的地要求 我们都将其进行传输
             simulator.getEventManager().pushEvent(
-                    new TransmissionEvent(transmissionManager.getTriggerTime(distance) + simulator.getNowTime(),
+                    new TransmissionEvent(transmissionManager.calcTransmissionTime(distance) + simulator.getNowTime(),
                             mote, packet)
             );
         }
@@ -105,5 +104,23 @@ public abstract class Mote {
             }
         }
         return false;
+    }
+
+    /**
+     * 监听端口，往监听列表中，增加该端口
+     *
+     * @param port 端口号
+     */
+    public void listenPort(int port) {
+        registerPortList.add(port);
+    }
+
+    /**
+     * 监听地址，在监听列表中，增加该地址
+     *
+     * @param ip 地址
+     */
+    public void listenIp(String ip) {
+        registerIpAddressList.add(ip);
     }
 }

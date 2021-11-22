@@ -1,12 +1,12 @@
 package com.sicnu.raftsimu.ui;
 
+import com.sicnu.raftsimu.core.RaftSimulator;
 import com.sicnu.raftsimu.core.command.*;
 
 import java.io.*;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.List;
 
 /**
  * CommandTranslator 是一个用户接口类，
@@ -14,6 +14,7 @@ import java.util.List;
  * 可以作为一个成员变量被传入RaftSimulator之中，进而完成工作。
  */
 public class CommandTranslator {
+    RaftSimulator simulator;
     // 使用read() 后，会对该变量进行初始化
 
     private Deque<Command> commands;
@@ -23,7 +24,10 @@ public class CommandTranslator {
     // <用户输入的指令名, 对应指令的参数长度>
     private final HashMap<String, Integer> commandLengthHashMap;
     // <用户输入的Raft操作名，操作的枚举类型>
-    private final HashMap<String, RaftOpCommand.Operation> operationTypeHashMap;
+    private final HashMap<String, RaftOpCommand.Operation> raftOperationTypeHashMap;
+    // <用户输入的Raft操作名，操作的枚举类型>
+    private final HashMap<String, NetInitCommand.Operation> netOperationTypeHashMap;
+
     /**
      * 在构造函数中 我们为了能快速的生成指令 我们提前在这边构建两个hashMap
      * 使用String，分别能够获取到“指令类型”和“指令长度”
@@ -32,7 +36,8 @@ public class CommandTranslator {
         //初始化对象
         commandTypeHashMap = new HashMap<>();
         commandLengthHashMap = new HashMap<>();
-        operationTypeHashMap = new HashMap<>();
+        raftOperationTypeHashMap = new HashMap<>();
+        netOperationTypeHashMap = new HashMap<>();
         //对指令集进行初始化
         commandTypeHashMap.put("NODE_ADD", Command.CommandType.NODE_ADD);
         commandTypeHashMap.put("NODE_DEL", Command.CommandType.NODE_DEL);
@@ -41,6 +46,8 @@ public class CommandTranslator {
         commandTypeHashMap.put("RAFT_ELECT", Command.CommandType.RAFT_ELECT);
         commandTypeHashMap.put("RAFT_BEAT", Command.CommandType.RAFT_BEAT);
         commandTypeHashMap.put("RAFT_OP", Command.CommandType.RAFT_OP);
+        commandTypeHashMap.put("NET_INIT", Command.CommandType.NET_INIT);
+        commandTypeHashMap.put("NET_SEND", Command.CommandType.NET_SEND);
         //对指令长度集进行初始化
         commandLengthHashMap.put("NODE_ADD", 5);
         commandLengthHashMap.put("NODE_DEL", 3);
@@ -49,10 +56,16 @@ public class CommandTranslator {
         commandLengthHashMap.put("RAFT_ELECT", 3);
         commandLengthHashMap.put("RAFT_BEAT", 3);
         commandLengthHashMap.put("RAFT_OP", 6);
+        commandLengthHashMap.put("NET_INIT", 5);
+        commandLengthHashMap.put("NET_SEND", 8);
+
         //对数据操作集进行初始化
-        operationTypeHashMap.put("add", RaftOpCommand.Operation.ADD);
-        operationTypeHashMap.put("del", RaftOpCommand.Operation.DEL);
-        operationTypeHashMap.put("modify", RaftOpCommand.Operation.MODIFY);
+        raftOperationTypeHashMap.put("add", RaftOpCommand.Operation.ADD);
+        raftOperationTypeHashMap.put("del", RaftOpCommand.Operation.DEL);
+        raftOperationTypeHashMap.put("modify", RaftOpCommand.Operation.MODIFY);
+        //对网络操作集进行初始化
+        netOperationTypeHashMap.put("ip", NetInitCommand.Operation.IP);
+        netOperationTypeHashMap.put("port", NetInitCommand.Operation.PORT);
     }
 
     /**
@@ -113,26 +126,34 @@ public class CommandTranslator {
         //依据相应的指令塞入参数
         if (type == Command.CommandType.NODE_ADD) {
             //生成 “添加节点”
-            return new NodeAddCommand(timeStamp, type, Integer.parseInt(commandStrings[2]),
+            return new NodeAddCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
                     Float.parseFloat(commandStrings[3]), Float.parseFloat(commandStrings[4]));
         } else if (type == Command.CommandType.NODE_DEL) {
             //生成“删除节点”
-            return new NodeDelCommand(timeStamp, type, Integer.parseInt(commandStrings[2]));
+            return new NodeDelCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
         } else if (type == Command.CommandType.NODE_BOOT) {
             //生成“启动节点”
-            return new NodeBootCommand(timeStamp, type, Integer.parseInt(commandStrings[2]));
+            return new NodeBootCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
         } else if (type == Command.CommandType.NODE_SHUT) {
             //生成“关闭节点”
-            return new NodeShutCommand(timeStamp, type, Integer.parseInt(commandStrings[2]));
+            return new NodeShutCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
         } else if (type == Command.CommandType.RAFT_ELECT) {
             //生成“节点选举”
-            return new RaftElectCommand(timeStamp, type, Integer.parseInt(commandStrings[2]));
+            return new RaftElectCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
         } else if (type == Command.CommandType.RAFT_BEAT) {
             //生成“节点心跳”
-            return new RaftBeatCommand(timeStamp, type, Integer.parseInt(commandStrings[2]));
+            return new RaftBeatCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
         } else if (type == Command.CommandType.RAFT_OP) {
-            return new RaftOpCommand(timeStamp, type, Integer.parseInt(commandStrings[2]),
-                    operationTypeHashMap.get(commandStrings[3]), commandStrings[4], commandStrings[5]);
+            return new RaftOpCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
+                    raftOperationTypeHashMap.get(commandStrings[3]), commandStrings[4], commandStrings[5]);
+        } else if (type == Command.CommandType.NET_INIT) {
+            return new NetInitCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
+                    netOperationTypeHashMap.get(commandStrings[3]), commandStrings[4]);
+        } else if (type == Command.CommandType.NET_SEND) {
+            return new NetSendCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
+                    commandStrings[3], Integer.parseInt(commandStrings[4]),
+                    commandStrings[5], Integer.parseInt(commandStrings[6]),
+                    commandStrings[7]);
         } else {
             throw new CommandParseException("No Matched Type");
         }

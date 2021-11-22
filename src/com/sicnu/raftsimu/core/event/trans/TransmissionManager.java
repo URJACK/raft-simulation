@@ -1,5 +1,6 @@
 package com.sicnu.raftsimu.core.event.trans;
 
+import com.sicnu.raftsimu.core.RaftSimulator;
 import com.sicnu.raftsimu.core.mote.Mote;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,6 +15,12 @@ import java.util.List;
  */
 public class TransmissionManager {
 
+    RaftSimulator simulator;
+
+    public TransmissionManager(RaftSimulator simulator) {
+        this.simulator = simulator;
+    }
+
     /**
      * 取得这个节点的传输范围内的其他节点
      *
@@ -24,8 +31,13 @@ public class TransmissionManager {
         return null;
     }
 
-    public long getTriggerTime(float distance) {
-        return 0;
+    /**
+     * 根据两点距离计算他们的传输时间
+     * @param distance 两点距离
+     * @return 传输时间
+     */
+    public long calcTransmissionTime(float distance) {
+        return (long) distance;
     }
 
     /**

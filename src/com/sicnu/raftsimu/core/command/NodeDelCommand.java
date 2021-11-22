@@ -1,5 +1,6 @@
 package com.sicnu.raftsimu.core.command;
 
+import com.sicnu.raftsimu.core.RaftSimulator;
 import lombok.Data;
 
 /**
@@ -12,12 +13,18 @@ public class NodeDelCommand extends Command {
 
     /**
      *
+     * @param simulator
      * @param timeStamp 时间戳
      * @param type      命令类型
      * @param nodeId    节点的Id
      */
-    public NodeDelCommand(long timeStamp, CommandType type, int nodeId) {
-        super(timeStamp, type);
+    public NodeDelCommand(RaftSimulator simulator, long timeStamp, CommandType type, int nodeId) {
+        super(simulator,timeStamp, type);
         this.nodeId = nodeId;
+    }
+
+    @Override
+    public void work() {
+
     }
 }
