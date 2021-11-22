@@ -48,6 +48,7 @@ public class CommandTranslator {
         commandTypeHashMap.put("RAFT_OP", Command.CommandType.RAFT_OP);
         commandTypeHashMap.put("NET_INIT", Command.CommandType.NET_INIT);
         commandTypeHashMap.put("NET_SEND", Command.CommandType.NET_SEND);
+        commandTypeHashMap.put("DISPLAY_CON", Command.CommandType.DISPLAY_CON);
         //对指令长度集进行初始化
         commandLengthHashMap.put("NODE_ADD", 5);
         commandLengthHashMap.put("NODE_DEL", 3);
@@ -58,6 +59,7 @@ public class CommandTranslator {
         commandLengthHashMap.put("RAFT_OP", 6);
         commandLengthHashMap.put("NET_INIT", 5);
         commandLengthHashMap.put("NET_SEND", 8);
+        commandLengthHashMap.put("DISPLAY_CON", 2);
 
         //对数据操作集进行初始化
         raftOperationTypeHashMap.put("add", RaftOpCommand.Operation.ADD);
@@ -105,7 +107,7 @@ public class CommandTranslator {
      * @return 解析得到的命令
      */
     Command parse(String commandText) throws CommandParseException {
-        commandText = clearSpace(commandText);
+        commandText = clearRedundant(commandText);
         String[] commandStrings = commandText.split(",");
         if (commandStrings.length < 2) {
             //最短的指令，也应当有两个参数
@@ -115,7 +117,7 @@ public class CommandTranslator {
         Command.CommandType type = commandTypeHashMap.get(commandStrings[1]);
         if (type == null) {
             //没有找到合适的指令名
-            throw new CommandParseException("No matched type");
+            throw new CommandParseException("No matched type of " + commandStrings[1]);
         }
         //读取到当前的指令参数长度
         int commandLen = commandLengthHashMap.get(commandStrings[1]);
@@ -123,40 +125,43 @@ public class CommandTranslator {
             //如果指令长度 与应有长度 不匹配
             throw new CommandParseException("Command's length is not matched", type);
         }
-        //依据相应的指令塞入参数
-        if (type == Command.CommandType.NODE_ADD) {
-            //生成 “添加节点”
-            return new NodeAddCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
-                    Float.parseFloat(commandStrings[3]), Float.parseFloat(commandStrings[4]));
-        } else if (type == Command.CommandType.NODE_DEL) {
-            //生成“删除节点”
-            return new NodeDelCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
-        } else if (type == Command.CommandType.NODE_BOOT) {
-            //生成“启动节点”
-            return new NodeBootCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
-        } else if (type == Command.CommandType.NODE_SHUT) {
-            //生成“关闭节点”
-            return new NodeShutCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
-        } else if (type == Command.CommandType.RAFT_ELECT) {
-            //生成“节点选举”
-            return new RaftElectCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
-        } else if (type == Command.CommandType.RAFT_BEAT) {
-            //生成“节点心跳”
-            return new RaftBeatCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
-        } else if (type == Command.CommandType.RAFT_OP) {
-            return new RaftOpCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
+        return switch (type) {
+            case NODE_ADD ->
+                    //生成 “添加节点”
+                    new NodeAddCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
+                            Float.parseFloat(commandStrings[3]), Float.parseFloat(commandStrings[4]));
+            case NODE_DEL ->
+                    //生成“删除节点”
+                    new NodeDelCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
+            case NODE_BOOT ->
+                    //生成“启动节点”
+                    new NodeBootCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
+            case NODE_SHUT ->
+                    //生成“关闭节点”
+                    new NodeShutCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
+            case RAFT_ELECT ->
+                    //生成“节点选举”
+                    new RaftElectCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
+            case RAFT_BEAT ->
+                    //生成“节点心跳”
+                    new RaftBeatCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]));
+            case RAFT_OP -> new RaftOpCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
                     raftOperationTypeHashMap.get(commandStrings[3]), commandStrings[4], commandStrings[5]);
-        } else if (type == Command.CommandType.NET_INIT) {
-            return new NetInitCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
-                    netOperationTypeHashMap.get(commandStrings[3]), commandStrings[4]);
-        } else if (type == Command.CommandType.NET_SEND) {
-            return new NetSendCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
-                    commandStrings[3], Integer.parseInt(commandStrings[4]),
-                    commandStrings[5], Integer.parseInt(commandStrings[6]),
-                    commandStrings[7]);
-        } else {
-            throw new CommandParseException("No Matched Type");
-        }
+            case NET_INIT ->
+                    //生成“初始化网络”命令
+                    new NetInitCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
+                            netOperationTypeHashMap.get(commandStrings[3]), commandStrings[4]);
+            case NET_SEND ->
+                    // 生成“网络发送”命令
+                    new NetSendCommand(simulator, timeStamp, type, Integer.parseInt(commandStrings[2]),
+                            commandStrings[3], Integer.parseInt(commandStrings[4]),
+                            commandStrings[5], Integer.parseInt(commandStrings[6]),
+                            commandStrings[7]);
+            case DISPLAY_CON ->
+                    // 生成控制台展示接口
+                    new DisplayCommand(simulator, timeStamp, type);
+            default -> throw new CommandParseException("No Matched Type");
+        };
     }
 
     /**
@@ -166,13 +171,22 @@ public class CommandTranslator {
      * @param commandText 单个命令的字符串
      * @return 清理完空格后的字符串
      */
-    private static String clearSpace(String commandText) {
+    private static String clearRedundant(String commandText) {
         StringBuilder sb = new StringBuilder();
+        int commentCount = 0;
         for (int i = 0; i < commandText.length(); i++) {
             char c = commandText.charAt(i);
-            if (c != ' ') {
-                sb.append(c);
+            if (c == '/') {
+                commentCount++;
+                if (commentCount == 2) {
+                    return sb.toString();
+                }
+                continue;
             }
+            if (c == ' ' || c == '\t') {
+                continue;
+            }
+            sb.append(c);
         }
         return sb.toString();
     }

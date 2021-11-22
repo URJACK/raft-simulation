@@ -17,8 +17,9 @@ public class Main {
     public static void main(String[] args) {
         CommandTranslator translator = new CommandTranslator();
         translator.read("resources/commands.txt");
-        RaftSimulator simulator = new RaftSimulator();
-        simulator.analysis(translator);
-        simulator.run();
+        System.out.println(translator);
+//        RaftSimulator simulator = new RaftSimulator();
+//        simulator.analysis(translator);
+//        simulator.run();
     }
 }

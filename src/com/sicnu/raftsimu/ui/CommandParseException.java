@@ -11,12 +11,12 @@ public class CommandParseException extends Exception {
     }
 
     public CommandParseException(String message, Command.CommandType type) {
-        super(message);
+        super(message + type.getClass().toString());
         this.commandType = type;
     }
 
     @Override
     public String toString() {
-        return commandType == null ? "" : commandType + super.toString();
+        return commandType == null ? super.toString() : commandType + super.toString();
     }
 }
