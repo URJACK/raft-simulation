@@ -1,6 +1,8 @@
 package com.sicnu;
 
 import com.sicnu.raftsimu.core.RaftSimulator;
+import com.sicnu.raftsimu.core.event.EventManager;
+import com.sicnu.raftsimu.core.event.trans.TransmissionManager;
 import com.sicnu.raftsimu.ui.CommandTranslator;
 import jdk.swing.interop.SwingInterOpUtils;
 
@@ -15,7 +17,7 @@ public class Main {
     public static void main(String[] args) {
         CommandTranslator translator = new CommandTranslator();
         translator.read("resources/commands.txt");
-        System.out.println(translator.getCommands().size());
-        System.out.println(translator);
+        RaftSimulator simulator = new RaftSimulator(translator);
+        simulator.run();
     }
 }

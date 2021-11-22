@@ -94,9 +94,9 @@ public class CommandTranslator {
     Command parse(String commandText) throws CommandParseException {
         commandText = clearSpace(commandText);
         String[] commandStrings = commandText.split(",");
-        if (commandStrings.length < 3) {
-            //最短的指令，也应当有三个参数
-            throw new CommandParseException("Invalid command, the parameters' num is less than 3");
+        if (commandStrings.length < 2) {
+            //最短的指令，也应当有两个参数
+            throw new CommandParseException("Invalid command, the parameters' num is less than 2");
         }
         long timeStamp = Long.parseLong(commandStrings[0]);
         Command.CommandType type = commandTypeHashMap.get(commandStrings[1]);
