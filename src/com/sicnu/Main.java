@@ -16,10 +16,11 @@ public class Main {
 
     public static void main(String[] args) {
         CommandTranslator translator = new CommandTranslator();
+//        System.out.println(translator);
+        RaftSimulator simulator = new RaftSimulator();
+        translator.equipSimulator(simulator);
         translator.read("resources/commands.txt");
-        System.out.println(translator);
-//        RaftSimulator simulator = new RaftSimulator();
-//        simulator.analysis(translator);
-//        simulator.run();
+        simulator.analysis(translator);
+        simulator.run();
     }
 }

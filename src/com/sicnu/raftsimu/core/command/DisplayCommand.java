@@ -1,5 +1,6 @@
 package com.sicnu.raftsimu.core.command;
 
+import com.sicnu.raftsimu.ui.InfoOutputManager;
 import com.sicnu.raftsimu.core.RaftSimulator;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class DisplayCommand extends Command {
 
     @Override
     public void work() {
-
+        InfoOutputManager infoOutputManager = simulator.getInfoOutputManager();
+        infoOutputManager.outputInfo();
     }
 }

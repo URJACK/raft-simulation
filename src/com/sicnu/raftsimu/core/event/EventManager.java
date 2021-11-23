@@ -33,9 +33,22 @@ public class EventManager {
      * @param commands 命令序列
      */
     public void analysis(Deque<Command> commands) {
-        Command command = commands.pollFirst();
-        assert command != null;
-        CommandEvent event = new CommandEvent(command.getTimeStamp(), command);
-        queue.add(event);
+        while (!commands.isEmpty()) {
+            Command command = commands.pollFirst();
+            assert command != null;
+            CommandEvent event = new CommandEvent(command.getTimeStamp(), command);
+            queue.add(event);
+        }
+    }
+
+    public boolean isEmpty() {
+        return queue.isEmpty();
+    }
+
+    public void exec() {
+        Event ev = queue.poll();
+        assert ev != null;
+        simulator.setTime(ev.getTriggerTime());
+        ev.work();
     }
 }

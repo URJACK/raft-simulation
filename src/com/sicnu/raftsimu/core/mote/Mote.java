@@ -1,5 +1,6 @@
 package com.sicnu.raftsimu.core.mote;
 
+import com.sicnu.raftsimu.ui.InfoOutputManager;
 import com.sicnu.raftsimu.core.RaftSimulator;
 import com.sicnu.raftsimu.core.event.TransmissionEvent;
 import com.sicnu.raftsimu.core.event.trans.TransmissionManager;
@@ -122,5 +123,15 @@ public abstract class Mote {
      */
     public void listenIp(String ip) {
         registerIpAddressList.add(ip);
+    }
+
+    /**
+     * 打印信息到控制台，对应当前的Simulator的时间
+     * [这里我们需要将要打印的信息缓存到ConsoleManager中]
+     * @param info 要打印的信息
+     */
+    public void print(String info) {
+        InfoOutputManager infoOutputManager = simulator.getInfoOutputManager();
+        infoOutputManager.pushInfo(simulator.getTime(),moteId, info);
     }
 }

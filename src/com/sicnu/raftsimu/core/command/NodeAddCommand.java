@@ -1,6 +1,7 @@
 package com.sicnu.raftsimu.core.command;
 
 import com.sicnu.raftsimu.core.RaftSimulator;
+import com.sicnu.raftsimu.core.event.trans.TransmissionManager;
 import com.sicnu.raftsimu.core.mote.MoteManager;
 import lombok.Data;
 
@@ -34,9 +35,12 @@ public class NodeAddCommand extends Command {
     @Override
     public void work() {
         MoteManager moteManager = simulator.getMoteManager();
+        TransmissionManager transmissionManager = simulator.getTransmissionManager();
         if (!moteManager.containMote(nodeId)) {
             //如果当前节点的id已经存在 则无法进行添加节点
             moteManager.addMote(nodeId, x, y);
+            //添加结点后，传输管理器需要刷新节点间的关系
+            transmissionManager.addNode(nodeId);
         }
     }
 }

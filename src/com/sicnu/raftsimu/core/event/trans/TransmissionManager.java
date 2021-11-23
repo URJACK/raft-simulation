@@ -2,9 +2,14 @@ package com.sicnu.raftsimu.core.event.trans;
 
 import com.sicnu.raftsimu.core.RaftSimulator;
 import com.sicnu.raftsimu.core.mote.Mote;
+import com.sicnu.raftsimu.core.mote.MoteManager;
+import com.sicnu.raftsimu.core.mote.utils.MoteCalculate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -15,10 +20,13 @@ import java.util.List;
  */
 public class TransmissionManager {
 
+    private static final float MAX_TRANSMIT_DISTANCE = 500;
     RaftSimulator simulator;
+    HashMap<Integer, LinkedList<Neighbor>> table;
 
     public TransmissionManager(RaftSimulator simulator) {
         this.simulator = simulator;
+        table = new HashMap<>();
     }
 
     /**
@@ -28,16 +36,46 @@ public class TransmissionManager {
      * @return
      */
     public List<Neighbor> getNeighbors(Mote mote) {
-        return null;
+        return table.get(mote.getMoteId());
     }
 
     /**
      * 根据两点距离计算他们的传输时间
+     *
      * @param distance 两点距离
      * @return 传输时间
      */
     public long calcTransmissionTime(float distance) {
         return (long) distance;
+    }
+
+    /**
+     * 增加节点，刷新状态信息
+     *
+     * @param nodeId
+     */
+    public void addNode(int nodeId) {
+        MoteManager moteManager = simulator.getMoteManager();
+        ArrayList<Mote> motes = moteManager.getMotes();
+        LinkedList<Neighbor> neighborsOfA = table.computeIfAbsent(nodeId, k -> new LinkedList<>());
+        Mote moteA = moteManager.getMote(nodeId);
+        for (int i = 0; i < motes.size(); i++) {
+            Mote moteB = motes.get(i);
+            LinkedList<Neighbor> neighborsOfB = table.computeIfAbsent(moteB.getMoteId(), k -> new LinkedList<>());
+            if (moteB.getMoteId() == nodeId) {
+                //不计算自己和自己
+                continue;
+            }
+            float distance = MoteCalculate.eulaDistance(moteB, moteA);
+            if (distance > MAX_TRANSMIT_DISTANCE) {
+                //距离太远无法成为邻居
+                continue;
+            }
+            Neighbor neighborOfA = new Neighbor(moteB, distance);
+            Neighbor neighborOfB = new Neighbor(moteA, distance);
+            neighborsOfA.add(neighborOfA);
+            neighborsOfB.add(neighborOfB);
+        }
     }
 
     /**

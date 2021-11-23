@@ -1,12 +1,11 @@
 package com.sicnu.raftsimu.core;
 
 import com.sicnu.raftsimu.core.command.Command;
-import com.sicnu.raftsimu.core.event.Event;
 import com.sicnu.raftsimu.core.event.EventManager;
-import com.sicnu.raftsimu.core.event.TransmissionEvent;
 import com.sicnu.raftsimu.core.event.trans.TransmissionManager;
 import com.sicnu.raftsimu.core.mote.MoteManager;
 import com.sicnu.raftsimu.ui.CommandTranslator;
+import com.sicnu.raftsimu.ui.InfoOutputManager;
 import lombok.Data;
 
 import java.util.Deque;
@@ -25,6 +24,8 @@ public class RaftSimulator {
     MoteManager moteManager;
     //事件管理器 用来快速驱动事件的推动
     EventManager eventManager;
+    //信息输出管理器
+    InfoOutputManager infoOutputManager;
 
 
     /**
@@ -34,6 +35,7 @@ public class RaftSimulator {
         transmissionManager = new TransmissionManager(this);
         eventManager = new EventManager(this);
         moteManager = new MoteManager(this);
+        infoOutputManager = new InfoOutputManager(this);
     }
 
     /**
@@ -57,7 +59,9 @@ public class RaftSimulator {
      * 模拟启动
      */
     public void run() {
-
+        while (!eventManager.isEmpty()){
+            eventManager.exec();
+        }
     }
 
     /**

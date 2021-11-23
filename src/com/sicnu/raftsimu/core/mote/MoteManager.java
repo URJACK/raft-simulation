@@ -4,7 +4,6 @@ import com.sicnu.raftsimu.core.RaftSimulator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class MoteManager {
     ArrayList<Mote> motes;
@@ -22,12 +21,16 @@ public class MoteManager {
     }
 
     public void addMote(int nodeId, float x, float y) {
-        BasicMote mote = new BasicMote(simulator, nodeId, x, y);
+        NormalMote mote = new NormalMote(simulator, nodeId, x, y);
         motes.add(mote);
         moteRecorder.put(nodeId, mote);
     }
 
     public Mote getMote(int nodeId) {
         return moteRecorder.get(nodeId);
+    }
+
+    public ArrayList<Mote> getMotes() {
+        return motes;
     }
 }

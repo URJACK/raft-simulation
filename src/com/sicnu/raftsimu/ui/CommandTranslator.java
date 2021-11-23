@@ -71,12 +71,24 @@ public class CommandTranslator {
     }
 
     /**
+     * 装备simulator
+     *
+     * @param simulator 模拟器对象
+     */
+    public void equipSimulator(RaftSimulator simulator) {
+        this.simulator = simulator;
+    }
+
+    /**
      * CommandTranslator 通过读取文本，解析文本的指令信息
      * 将这些解析出来的指令序列，都存入自己的序列中。
      *
      * @param filePath 读取的文件路径
      */
     public void read(String filePath) {
+        if (simulator == null) {
+            System.out.println("WARNING: the simulator is not equipped! command will not work in the right position.");
+        }
         commands = new LinkedList<>();
         Command bufferCommand = null;
         File file = new File(filePath);
