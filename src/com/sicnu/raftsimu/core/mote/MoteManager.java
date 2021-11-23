@@ -20,10 +20,15 @@ public class MoteManager {
         return moteRecorder.containsKey(nodeId);
     }
 
-    public void addMote(int nodeId, float x, float y) {
+    public Mote addMote(int nodeId, float x, float y) {
+        if (moteRecorder.containsKey(nodeId)) {
+            //如果已经存在了这个节点
+            return null;
+        }
         NormalMote mote = new NormalMote(simulator, nodeId, x, y);
         motes.add(mote);
         moteRecorder.put(nodeId, mote);
+        return mote;
     }
 
     public Mote getMote(int nodeId) {

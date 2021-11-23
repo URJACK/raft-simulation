@@ -41,14 +41,31 @@ public class EventManager {
         }
     }
 
+    /**
+     * 检查当前的Event是否为空
+     */
     public boolean isEmpty() {
         return queue.isEmpty();
     }
 
+    /**
+     * 从事件队列中，提取事件，并进行执行该事件
+     * 这里需要着重检测TimeoutEvent的Loop
+     */
     public void exec() {
         Event ev = queue.poll();
         assert ev != null;
         simulator.setTime(ev.getTriggerTime());
         ev.work();
+        //对带loop的TimeoutEvent事件做循环处理
+        if (ev instanceof TimeoutEvent) {
+            TimeoutEvent timeoutEvent = (TimeoutEvent) ev;
+            if (timeoutEvent.isLoop()) {
+                //如果是一个循环事件 我们重算其的触发时间。
+                timeoutEvent.setTriggerTime(timeoutEvent.getSpanTime() + simulator.getNowTime());
+                //并将其再次加入队列
+                queue.add(timeoutEvent);
+            }
+        }
     }
 }

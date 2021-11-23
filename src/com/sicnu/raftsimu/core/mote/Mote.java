@@ -1,5 +1,6 @@
 package com.sicnu.raftsimu.core.mote;
 
+import com.sicnu.raftsimu.core.event.TimeoutEvent;
 import com.sicnu.raftsimu.ui.InfoOutputManager;
 import com.sicnu.raftsimu.core.RaftSimulator;
 import com.sicnu.raftsimu.core.event.TransmissionEvent;
@@ -40,6 +41,11 @@ public abstract class Mote {
         registerIpAddressList = new LinkedList<>();
         registerPortList = new LinkedList<>();
     }
+
+    /**
+     * 节点创建后，一定会执行的函数
+     */
+    public abstract void init();
 
     /**
      * 网络接收函数
@@ -128,10 +134,21 @@ public abstract class Mote {
     /**
      * 打印信息到控制台，对应当前的Simulator的时间
      * [这里我们需要将要打印的信息缓存到ConsoleManager中]
+     *
      * @param info 要打印的信息
      */
-    public void print(String info) {
+    public final void print(String info) {
         InfoOutputManager infoOutputManager = simulator.getInfoOutputManager();
-        infoOutputManager.pushInfo(simulator.getTime(),moteId, info);
+        infoOutputManager.pushInfo(simulator.getTime(), moteId, info);
+    }
+
+    /**
+     * 设置一个延时事件
+     *
+     * @param event 事件本身
+     */
+    public final void setTimeout(TimeoutEvent event) {
+        //添加一个新的事件
+        simulator.getEventManager().pushEvent(event);
     }
 }

@@ -1,6 +1,7 @@
 package com.sicnu.raftsimu.core.mote;
 
 import com.sicnu.raftsimu.core.RaftSimulator;
+import com.sicnu.raftsimu.core.event.TimeoutEvent;
 import com.sicnu.raftsimu.core.event.trans.TransmissionManager;
 import com.sicnu.raftsimu.core.event.trans.TransmissionPacket;
 import lombok.Data;
@@ -15,6 +16,17 @@ public class NormalMote extends Mote {
      */
     public NormalMote(RaftSimulator simulator, int moteId, float x, float y) {
         super(simulator, moteId, x, y);
+    }
+
+    @Override
+    public void init() {
+        TimeoutEvent event = new TimeoutEvent(500, true, simulator, this) {
+            @Override
+            public void work() {
+                print("我是节点");
+            }
+        };
+        setTimeout(event);
     }
 
     @Override

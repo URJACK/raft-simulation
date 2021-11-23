@@ -18,6 +18,8 @@ import java.util.Deque;
 public class RaftSimulator {
     //记录当前仿真世界的时间
     long time = 0;
+    //如果超过了这个时间，仿真就结束
+    long endTime = 0;
     //传输记录器 用来记录每个节点的邻居节点信息
     TransmissionManager transmissionManager;
     //节点管理器 管理结点的存储
@@ -31,11 +33,12 @@ public class RaftSimulator {
     /**
      * 初始化Manager
      */
-    public RaftSimulator() {
+    public RaftSimulator(long endTime) {
         transmissionManager = new TransmissionManager(this);
         eventManager = new EventManager(this);
         moteManager = new MoteManager(this);
         infoOutputManager = new InfoOutputManager(this);
+        this.endTime = endTime;
     }
 
     /**
@@ -59,8 +62,12 @@ public class RaftSimulator {
      * 模拟启动
      */
     public void run() {
-        while (!eventManager.isEmpty()){
+        while (!eventManager.isEmpty()) {
             eventManager.exec();
+            if (time > endTime) {
+                //超过了这个时间，仿真就结束，不再遍历事件
+                break;
+            }
         }
     }
 
