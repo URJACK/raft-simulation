@@ -1,4 +1,4 @@
-package com.sicnu.raft.command;
+package com.sicnu.netsimu.raft.command;
 
 import com.sicnu.netsimu.core.command.*;
 import com.sicnu.netsimu.ui.CommandParseException;

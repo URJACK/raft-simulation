@@ -1,10 +1,9 @@
 package com.sicnu;
 
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.command.BasicCommandTranslator;
 import com.sicnu.netsimu.core.command.CommandTranslator;
 import com.sicnu.netsimu.ui.summary.IncrementalSummarizerWithConsole;
-import com.sicnu.raft.command.RaftCommandTranslator;
+import com.sicnu.netsimu.raft.command.RaftCommandTranslator;
 
 public class Main {
 

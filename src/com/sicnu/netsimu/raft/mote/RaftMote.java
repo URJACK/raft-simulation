@@ -1,4 +1,4 @@
-package com.sicnu.raft.mote;
+package com.sicnu.netsimu.raft.mote;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.trans.TransmissionPacket;

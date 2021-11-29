@@ -1,4 +1,4 @@
-package com.sicnu.raft.command;
+package com.sicnu.netsimu.raft.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.command.Command;

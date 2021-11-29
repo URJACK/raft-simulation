@@ -1,16 +1,6 @@
 package com.sicnu.netsimu.core.command;
 
-import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.command.*;
 import com.sicnu.netsimu.ui.CommandParseException;
-import com.sicnu.raft.command.RaftBeatCommand;
-import com.sicnu.raft.command.RaftElectCommand;
-import com.sicnu.raft.command.RaftOpCommand;
-
-import java.io.*;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.LinkedList;
 
 /**
  * BasicCommandTranslator 是一个用户接口类，
