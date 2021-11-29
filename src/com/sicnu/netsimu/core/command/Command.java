@@ -49,7 +49,9 @@ public abstract class Command {
      * 第三个是 CommandTranslator 中的 parse()
      */
     public enum CommandType {
-        NODE_ADD, NODE_DEL, NODE_BOOT, NODE_SHUT, RAFT_ELECT, RAFT_BEAT, RAFT_OP, NET_INIT, NET_SEND, DISPLAY_CON
+        NODE_ADD, NODE_DEL, NODE_BOOT, NODE_SHUT,
+        RAFT_ELECT, RAFT_BEAT, RAFT_OP, NET_INIT,
+        NET_SEND, DISPLAY_CON, SUMMARY
     }
 
 }

@@ -6,6 +6,7 @@ import com.sicnu.netsimu.core.event.trans.TransmissionManager;
 import com.sicnu.netsimu.core.mote.MoteManager;
 import com.sicnu.netsimu.ui.CommandTranslator;
 import com.sicnu.netsimu.ui.InfoOutputManager;
+import com.sicnu.netsimu.ui.summary.Summarizer;
 import lombok.Data;
 
 import java.util.Deque;
@@ -28,6 +29,8 @@ public class NetSimulator {
     EventManager eventManager;
     //信息输出管理器
     InfoOutputManager infoOutputManager;
+    //总结者
+    Summarizer summarizer;
 
 
     /**
@@ -76,5 +79,14 @@ public class NetSimulator {
      */
     public void reset() {
 
+    }
+
+    /**
+     * 装备总结者
+     *
+     * @param summarizer 总结者引用
+     */
+    public void equipSummarizer(Summarizer summarizer) {
+        this.summarizer = summarizer;
     }
 }

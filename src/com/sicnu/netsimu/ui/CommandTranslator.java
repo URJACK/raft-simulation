@@ -38,7 +38,7 @@ public class CommandTranslator {
         commandLengthHashMap = new HashMap<>();
         raftOperationTypeHashMap = new HashMap<>();
         netOperationTypeHashMap = new HashMap<>();
-        //对指令集进行初始化
+        //对指令集进行初始化 ---- [所有命令必须]
         commandTypeHashMap.put("NODE_ADD", Command.CommandType.NODE_ADD);
         commandTypeHashMap.put("NODE_DEL", Command.CommandType.NODE_DEL);
         commandTypeHashMap.put("NODE_BOOT", Command.CommandType.NODE_BOOT);
@@ -49,7 +49,8 @@ public class CommandTranslator {
         commandTypeHashMap.put("NET_INIT", Command.CommandType.NET_INIT);
         commandTypeHashMap.put("NET_SEND", Command.CommandType.NET_SEND);
         commandTypeHashMap.put("DISPLAY_CON", Command.CommandType.DISPLAY_CON);
-        //对指令长度集进行初始化
+        commandTypeHashMap.put("SUMMARY", Command.CommandType.SUMMARY);
+        //对指令长度集进行初始化 ---- [所有命令必须]
         commandLengthHashMap.put("NODE_ADD", 5);
         commandLengthHashMap.put("NODE_DEL", 3);
         commandLengthHashMap.put("NODE_BOOT", 3);
@@ -60,7 +61,7 @@ public class CommandTranslator {
         commandLengthHashMap.put("NET_INIT", 5);
         commandLengthHashMap.put("NET_SEND", 8);
         commandLengthHashMap.put("DISPLAY_CON", 2);
-
+        commandLengthHashMap.put("SUMMARY", 3);
         //对数据操作集进行初始化
         raftOperationTypeHashMap.put("add", RaftOpCommand.Operation.ADD);
         raftOperationTypeHashMap.put("del", RaftOpCommand.Operation.DEL);
@@ -172,6 +173,9 @@ public class CommandTranslator {
             case DISPLAY_CON ->
                     // 生成控制台展示接口
                     new DisplayCommand(simulator, timeStamp, type);
+            case SUMMARY ->
+                    // 生成总结命令
+                    new SummaryCommand(simulator, timeStamp, type, commandStrings[2]);
             default -> throw new CommandParseException("No Matched Type");
         };
     }
