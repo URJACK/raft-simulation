@@ -1,6 +1,9 @@
 package com.sicnu.netsimu.core.mote;
 
+import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
+import com.sicnu.netsimu.core.statis.EnergyStatistician;
+import com.sicnu.netsimu.core.statis.Statistician;
 import com.sicnu.netsimu.ui.InfoOutputManager;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
@@ -8,6 +11,9 @@ import com.sicnu.netsimu.core.event.trans.TransmissionManager;
 import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
 import lombok.Data;
 
+import java.lang.annotation.Inherited;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,8 +29,20 @@ public abstract class Mote {
     protected float y;
     protected List<String> registerIpAddressList;
     protected List<Integer> registerPortList;
+    /**
+     * 获得MoteClass对象，通过反射方式执行函数，进而计算能耗
+     */
+    protected Class moteClass;
+    /**
+     * 统计者
+     */
+    protected Statistician<Float> energyStatistician;
 
-    public Mote() {
+    public Mote() throws Exception {
+        /**
+         * 不建议使用该方式创建Mote
+         */
+        throw new Exception("不建议使用该方式创建Mote");
     }
 
     /**
@@ -40,6 +58,8 @@ public abstract class Mote {
         this.y = y;
         registerIpAddressList = new LinkedList<>();
         registerPortList = new LinkedList<>();
+        energyStatistician = new EnergyStatistician(this);
+        moteClass = Mote.class;
     }
 
     /**
@@ -59,6 +79,7 @@ public abstract class Mote {
      *
      * @param packet 发送的数据包
      */
+    @EnergyCost(30f)
     public boolean netSend(TransmissionPacket packet) {
         //检查自身当前是否可以发出该数据包
         if (!containAddress(packet.getSrcIp()) || !containPort(packet.getSrcPort())) {
@@ -89,6 +110,7 @@ public abstract class Mote {
      * @param port 端口
      * @return
      */
+    @EnergyCost(8.6f)
     protected boolean containPort(int port) {
         for (Integer integer : registerPortList) {
             if (integer == port) {
@@ -104,6 +126,7 @@ public abstract class Mote {
      * @param ip ip地址
      * @return
      */
+    @EnergyCost(8.6f)
     protected boolean containAddress(String ip) {
         for (String s : registerIpAddressList) {
             if (s.equals(ip)) {
@@ -118,6 +141,7 @@ public abstract class Mote {
      *
      * @param port 端口号
      */
+    @EnergyCost(15.8f)
     public void listenPort(int port) {
         registerPortList.add(port);
     }
@@ -125,8 +149,9 @@ public abstract class Mote {
     /**
      * 监听地址，在监听列表中，增加该地址
      *
-     * @param ip 地址
+     * @param ip 被监听的ip地址
      */
+    @EnergyCost(15.8f)
     public void listenIp(String ip) {
         registerIpAddressList.add(ip);
     }
@@ -137,6 +162,7 @@ public abstract class Mote {
      *
      * @param info 要打印的信息
      */
+    @EnergyCost(5.2f)
     public final void print(String info) {
         InfoOutputManager infoOutputManager = simulator.getInfoOutputManager();
         infoOutputManager.pushInfo(simulator.getTime(), moteId, info);
@@ -150,5 +176,51 @@ public abstract class Mote {
     public final void setTimeout(TimeoutEvent event) {
         //添加一个新的事件
         simulator.getEventManager().pushEvent(event);
+    }
+
+    /**
+     * 通过call调用函数
+     * 依赖于 energyStatistician 来计算能耗
+     *
+     * @param methodName 方法名称
+     * @param args       方法参数列表
+     * @return 函数返回值对象
+     */
+    public Object call(String methodName, Object... args) {
+        Method method = null;
+        try {
+            //获取每个参数的类型
+            Class[] paramArgs = new Class[args.length];
+            for (int i = 0; i < args.length; i++) {
+                paramArgs[i] = args[i].getClass();
+            }
+            method = moteClass.getMethod(methodName, paramArgs);
+            method.setAccessible(false);
+            //执行该函数 得到函数返回值
+            Object result = method.invoke(this, args);
+            //获取到该函数的能耗对象
+            EnergyCost annotation = method.getAnnotation(EnergyCost.class);
+            //计算出该函数的能耗
+            float energyCost;
+            if (annotation == null) {
+                energyCost = 0;
+            } else {
+                energyCost = annotation.value();
+                float beta = annotation.beta();
+                energyCost = (float) (energyCost * (1 - Math.random() * beta));
+            }
+//            System.out.println("DEBUG cost " + energyCost);
+            //将能耗统计进入统计家中
+            energyStatistician.addValue(methodName, energyCost);
+            //将函数执行的返回值返回出去
+            return result;
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -28,6 +28,7 @@ public class TransmissionEvent extends Event {
 
     @Override
     public void work() {
-        receiver.netReceive(packet);
+//        receiver.netReceive(packet);
+        receiver.call("netReceive", packet);
     }
 }

@@ -48,7 +48,8 @@ public class NodeAddCommand extends Command {
             //添加结点后，传输管理器需要刷新节点间的关系
             transmissionManager.addNode(nodeId);
             // 每个新结点，都将触发自身的init()函数
-            newMote.init();
+//            newMote.init();
+            newMote.call("init");
         }
     }
 }

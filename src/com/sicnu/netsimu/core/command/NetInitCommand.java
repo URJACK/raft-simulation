@@ -40,7 +40,8 @@ public class NetInitCommand extends Command {
             mote.listenPort(port);
         } else {
             String ip = this.value;
-            mote.listenIp(ip);
+//            mote.listenIp(ip);
+            mote.call("listenIp", ip);
         }
     }
 
