@@ -11,7 +11,7 @@ public class CommandParseException extends Exception {
      * 可能为空。
      * 是否为空决定了toString()逻辑的不同
      */
-    Command.CommandType commandType;
+    String commandType;
 
     /**
      * @param message 异常信息
@@ -24,8 +24,8 @@ public class CommandParseException extends Exception {
      * @param message 异常信息
      * @param type    可能的命令类型
      */
-    public CommandParseException(String message, Command.CommandType type) {
-        super(message + type.getClass().toString());
+    public CommandParseException(String message, String type) {
+        super(message + type);
         this.commandType = type;
     }
 

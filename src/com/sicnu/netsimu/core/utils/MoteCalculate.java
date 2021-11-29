@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.core.mote.utils;
+package com.sicnu.netsimu.core.utils;
 
 import com.sicnu.netsimu.core.mote.Mote;
 

@@ -34,7 +34,7 @@ public class NetSendCommand extends Command {
      * @param dstPort   发送的目的端口
      * @param value     发送的数值
      */
-    public NetSendCommand(NetSimulator simulator, long timeStamp, CommandType type, int nodeId,
+    public NetSendCommand(NetSimulator simulator, long timeStamp, String type, int nodeId,
                           String srcIp, int srcPort, String dstIp, int dstPort, String value) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;

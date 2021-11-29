@@ -18,7 +18,7 @@ public class SummaryCommand extends Command {
      * @param timeStamp 时间戳
      * @param type      指令类型
      */
-    public SummaryCommand(NetSimulator simulator, long timeStamp, CommandType type, String param) {
+    public SummaryCommand(NetSimulator simulator, long timeStamp, String type, String param) {
         super(simulator, timeStamp, type);
         this.param = param;
     }

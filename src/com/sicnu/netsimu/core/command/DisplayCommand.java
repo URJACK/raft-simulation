@@ -16,7 +16,7 @@ public class DisplayCommand extends Command {
      * @param timeStamp 时间戳
      * @param type 命令类型
      */
-    public DisplayCommand(NetSimulator simulator, long timeStamp, CommandType type) {
+    public DisplayCommand(NetSimulator simulator, long timeStamp, String type) {
         super(simulator, timeStamp, type);
     }
 

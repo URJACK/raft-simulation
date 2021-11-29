@@ -17,7 +17,7 @@ public class NodeDelCommand extends Command {
      * @param type      命令类型
      * @param nodeId    节点的Id
      */
-    public NodeDelCommand(NetSimulator simulator, long timeStamp, CommandType type, int nodeId) {
+    public NodeDelCommand(NetSimulator simulator, long timeStamp, String type, int nodeId) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
     }

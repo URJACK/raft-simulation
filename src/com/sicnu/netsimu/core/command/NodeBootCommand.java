@@ -18,7 +18,7 @@ public class NodeBootCommand extends Command {
      * @param type 命令类型
      * @param nodeId 节点id
      */
-    public NodeBootCommand(NetSimulator simulator, long timeStamp, CommandType type, int nodeId) {
+    public NodeBootCommand(NetSimulator simulator, long timeStamp, String type, int nodeId) {
         super(simulator,timeStamp, type);
         this.nodeId = nodeId;
     }

@@ -24,7 +24,7 @@ public class NetInitCommand extends Command {
      * @param operation 操作类型，是ip还是port
      * @param value     操作值
      */
-    public NetInitCommand(NetSimulator simulator, long timeStamp, CommandType type, int nodeId, Operation operation, String value) {
+    public NetInitCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, Operation operation, String value) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
         this.operation = operation;

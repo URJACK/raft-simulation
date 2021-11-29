@@ -1,6 +1,7 @@
-package com.sicnu.netsimu.core.command;
+package com.sicnu.raft.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
+import com.sicnu.netsimu.core.command.Command;
 import lombok.Data;
 
 /**
@@ -34,7 +35,8 @@ public class RaftOpCommand extends Command {
      * @param key       操作键
      * @param value     操作值
      */
-    public RaftOpCommand(NetSimulator simulator, long timeStamp, CommandType type, int nodeId, Operation operation, String key, String value) {
+    public RaftOpCommand(NetSimulator simulator, long timeStamp, String type, int nodeId,
+                         Operation operation, String key, String value) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
         this.operation = operation;

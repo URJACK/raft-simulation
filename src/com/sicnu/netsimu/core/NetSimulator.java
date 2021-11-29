@@ -1,10 +1,11 @@
 package com.sicnu.netsimu.core;
 
 import com.sicnu.netsimu.core.command.Command;
+import com.sicnu.netsimu.core.command.CommandTranslator;
 import com.sicnu.netsimu.core.event.EventManager;
 import com.sicnu.netsimu.core.event.trans.TransmissionManager;
 import com.sicnu.netsimu.core.mote.MoteManager;
-import com.sicnu.netsimu.ui.CommandTranslator;
+import com.sicnu.netsimu.core.command.BasicCommandTranslator;
 import com.sicnu.netsimu.ui.InfoOutputManager;
 import com.sicnu.netsimu.ui.summary.Summarizer;
 import lombok.Data;

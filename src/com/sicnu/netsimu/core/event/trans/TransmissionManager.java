@@ -3,7 +3,7 @@ package com.sicnu.netsimu.core.event.trans;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
-import com.sicnu.netsimu.core.mote.utils.MoteCalculate;
+import com.sicnu.netsimu.core.utils.MoteCalculate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

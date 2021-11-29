@@ -1,13 +1,14 @@
-package com.sicnu.netsimu.core.command;
+package com.sicnu.raft.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
+import com.sicnu.netsimu.core.command.Command;
 import lombok.Data;
 
 /**
- * 心跳包
+ * Raft选举命令
  */
 @Data
-public class RaftBeatCommand extends Command {
+public class RaftElectCommand extends Command {
     int nodeId;
 
     /**
@@ -16,8 +17,8 @@ public class RaftBeatCommand extends Command {
      * @param type      命令类型
      * @param nodeId    节点id
      */
-    public RaftBeatCommand(NetSimulator simulator, long timeStamp, CommandType type, int nodeId) {
-        super(simulator, timeStamp, type);
+    public RaftElectCommand(NetSimulator simulator, long timeStamp, String type, int nodeId) {
+        super(simulator,timeStamp, type);
         this.nodeId = nodeId;
     }
 

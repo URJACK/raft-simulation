@@ -27,7 +27,7 @@ public class NodeAddCommand extends Command {
      * @param x         节点x坐标
      * @param y         节点y坐标
      */
-    public NodeAddCommand(NetSimulator simulator, long timeStamp, CommandType type, int nodeId, float x, float y) {
+    public NodeAddCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, float x, float y) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
         this.x = x;

@@ -22,7 +22,7 @@ import lombok.Data;
 public abstract class Command {
     protected NetSimulator simulator;
     protected long timeStamp;
-    protected CommandType type;
+    protected String type;
 
     public Command() {
 
@@ -33,25 +33,12 @@ public abstract class Command {
      * @param timeStamp 时间戳
      * @param type      指令类型
      */
-    public Command(NetSimulator simulator, long timeStamp, CommandType type) {
+    public Command(NetSimulator simulator, long timeStamp, String type) {
         this.timeStamp = timeStamp;
         this.type = type;
         this.simulator = simulator;
     }
 
     public abstract void work();
-
-    /**
-     * Command类型
-     * 有三个地方是耦合的：
-     * 第一个是此处的CommandType
-     * 第二个是 CommandTranslator 中的 构造函数
-     * 第三个是 CommandTranslator 中的 parse()
-     */
-    public enum CommandType {
-        NODE_ADD, NODE_DEL, NODE_BOOT, NODE_SHUT,
-        RAFT_ELECT, RAFT_BEAT, RAFT_OP, NET_INIT,
-        NET_SEND, DISPLAY_CON, SUMMARY
-    }
 
 }

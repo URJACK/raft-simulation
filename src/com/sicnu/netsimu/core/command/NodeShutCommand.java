@@ -10,7 +10,7 @@ import lombok.Data;
 public class NodeShutCommand extends Command {
     int nodeId;
 
-    public NodeShutCommand(NetSimulator simulator, long timeStamp, CommandType type, int nodeId) {
+    public NodeShutCommand(NetSimulator simulator, long timeStamp, String type, int nodeId) {
         super(simulator,timeStamp, type);
         this.nodeId = nodeId;
     }
