@@ -35,7 +35,7 @@ public class NetInitCommand extends Command {
     public void work() {
         MoteManager moteManager = simulator.getMoteManager();
         Mote mote = moteManager.getMote(nodeId);
-        if (this.operation == Operation.PORT) {
+        if (this.operation.equals(Operation.PORT)) {
             int port = Integer.parseInt(this.value);
 //            mote.listenPort(port);
             mote.call("listenPort", port);

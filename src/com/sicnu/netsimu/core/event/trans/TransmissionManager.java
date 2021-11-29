@@ -65,7 +65,7 @@ public class TransmissionManager {
         for (int i = 0; i < motes.size(); i++) {
             Mote moteB = motes.get(i);
             LinkedList<Neighbor> neighborsOfB = table.computeIfAbsent(moteB.getMoteId(), k -> new LinkedList<>());
-            if (moteB.getMoteId() == nodeId) {
+            if (moteB.getMoteId() == (nodeId)) {
                 //不计算自己和自己
                 continue;
             }

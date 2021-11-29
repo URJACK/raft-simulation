@@ -18,8 +18,7 @@ public class NormalMote extends Mote {
      * @param y         节点的y坐标
      */
     public NormalMote(NetSimulator simulator, int moteId, float x, float y) {
-        super(simulator, moteId, x, y);
-        moteClass = this.getClass();
+        super(simulator, moteId, x, y, NormalMote.class);
     }
 
     @Override

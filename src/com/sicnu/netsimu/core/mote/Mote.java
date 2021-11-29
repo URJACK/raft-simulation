@@ -51,7 +51,7 @@ public abstract class Mote {
      * @param x         节点的x坐标
      * @param y         节点的y坐标
      */
-    public Mote(NetSimulator simulator, int moteId, float x, float y) {
+    public Mote(NetSimulator simulator, int moteId, float x, float y, Class moteClass) {
         this.simulator = simulator;
         this.moteId = moteId;
         this.x = x;
@@ -59,7 +59,7 @@ public abstract class Mote {
         registerIpAddressList = new LinkedList<>();
         registerPortList = new LinkedList<>();
         energyStatistician = new EnergyStatistician(this);
-        moteClass = Mote.class;
+        this.moteClass = moteClass;
     }
 
     /**
@@ -116,7 +116,7 @@ public abstract class Mote {
     @EnergyCost(8.6f)
     public boolean containPort(Integer port) {
         for (Integer integer : registerPortList) {
-            if (integer == port) {
+            if (integer.equals(port)) {
                 return true;
             }
         }
