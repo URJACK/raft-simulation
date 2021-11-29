@@ -82,7 +82,10 @@ public abstract class Mote {
     @EnergyCost(30f)
     public boolean netSend(TransmissionPacket packet) {
         //检查自身当前是否可以发出该数据包
-        if (!containAddress(packet.getSrcIp()) || !containPort(packet.getSrcPort())) {
+//        if (! containAddress(packet.getSrcIp()) || !containPort(packet.getSrcPort())) {
+        boolean resultIp = (boolean) call("containAddress", (packet.getSrcIp()));
+        boolean resultPort = (boolean) call("containPort", (packet.getSrcPort()));
+        if (!resultIp || !resultPort) {
             //如果自身并不包含这个ip地址 或者 存在不包含这个端口号的情况
             //那么本次发送数据包就会失败
             return false;
@@ -111,7 +114,7 @@ public abstract class Mote {
      * @return
      */
     @EnergyCost(8.6f)
-    protected boolean containPort(int port) {
+    public boolean containPort(Integer port) {
         for (Integer integer : registerPortList) {
             if (integer == port) {
                 return true;
@@ -127,7 +130,7 @@ public abstract class Mote {
      * @return
      */
     @EnergyCost(8.6f)
-    protected boolean containAddress(String ip) {
+    public boolean containAddress(String ip) {
         for (String s : registerIpAddressList) {
             if (s.equals(ip)) {
                 return true;
@@ -142,7 +145,7 @@ public abstract class Mote {
      * @param port 端口号
      */
     @EnergyCost(15.8f)
-    public void listenPort(int port) {
+    public void listenPort(Integer port) {
         registerPortList.add(port);
     }
 
@@ -195,7 +198,6 @@ public abstract class Mote {
                 paramArgs[i] = args[i].getClass();
             }
             method = moteClass.getMethod(methodName, paramArgs);
-            method.setAccessible(false);
             //执行该函数 得到函数返回值
             Object result = method.invoke(this, args);
             //获取到该函数的能耗对象

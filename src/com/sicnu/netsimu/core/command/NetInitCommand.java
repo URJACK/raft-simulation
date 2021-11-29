@@ -37,7 +37,8 @@ public class NetInitCommand extends Command {
         Mote mote = moteManager.getMote(nodeId);
         if (this.operation == Operation.PORT) {
             int port = Integer.parseInt(this.value);
-            mote.listenPort(port);
+//            mote.listenPort(port);
+            mote.call("listenPort", port);
         } else {
             String ip = this.value;
 //            mote.listenIp(ip);

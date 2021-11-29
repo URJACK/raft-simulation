@@ -38,7 +38,9 @@ public class NormalMote extends Mote {
     @Override
     @EnergyCost(28f)
     public void netReceive(TransmissionPacket packet) {
-        if (!containAddress(packet.getDesIp()) || !containPort(packet.getDesPort())) {
+        boolean ipResult = (boolean) call("containAddress", packet.getDesIp());
+        boolean portResult = (boolean) call("containPort", packet.getDesPort());
+        if (!ipResult || !portResult) {
             //如果自身不符合条件
             return;
         }
