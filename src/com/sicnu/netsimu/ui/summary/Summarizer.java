@@ -15,5 +15,10 @@ public abstract class Summarizer {
         this.simulator = simulator;
     }
 
+    /**
+     * 总结触发动作
+     *
+     * @param param 触发动作参数
+     */
     public abstract void summarize(String param);
 }

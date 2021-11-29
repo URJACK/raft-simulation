@@ -18,6 +18,10 @@ public class TotalSummarizer extends Summarizer {
         super(simulator);
     }
 
+    /**
+     * TotalSummarizer目前参数无作用
+     * @param param 触发动作参数
+     */
     @Override
     public void summarize(String param) {
         MoteManager moteManager = simulator.getMoteManager();

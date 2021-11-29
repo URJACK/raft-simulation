@@ -7,6 +7,9 @@ import com.sicnu.netsimu.core.statis.Statistician;
 
 import java.util.*;
 
+/**
+ * 控制台输出 增量总结器
+ */
 public class IncrementalSummarizerWithConsole extends IncrementalSummarizer {
     HashMap<Integer, List<Float>> incrementalMap;
     public static final String OUTPUT = "OUTPUT";
@@ -20,6 +23,9 @@ public class IncrementalSummarizerWithConsole extends IncrementalSummarizer {
         incrementalMap = new HashMap<>();
     }
 
+    /**
+     * 控制台输出方式
+     */
     @Override
     protected void processOutput() {
         for (Map.Entry<Integer, List<Float>> entry : incrementalMap.entrySet()) {

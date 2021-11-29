@@ -7,6 +7,11 @@ import com.sicnu.netsimu.core.statis.Statistician;
 
 import java.util.*;
 
+/**
+ * 增量总结器
+ * 通过summarize调用两个内置方法
+ *
+ */
 public abstract class IncrementalSummarizer extends Summarizer {
     HashMap<Integer, List<Float>> incrementalMap;
     public static final String OUTPUT = "OUTPUT";
@@ -20,6 +25,11 @@ public abstract class IncrementalSummarizer extends Summarizer {
         incrementalMap = new HashMap<>();
     }
 
+    /**
+     * 首先调用processBasicCalc()
+     * 如果 param == "OUTPUT" 则调用 processOutput()
+     * @param param 触发动作参数，用来控制是否调用 processOutput()
+     */
     @Override
     public void summarize(String param) {
         processBasicCalc();
