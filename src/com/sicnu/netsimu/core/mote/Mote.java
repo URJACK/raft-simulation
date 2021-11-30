@@ -14,6 +14,7 @@ import lombok.Data;
 import java.lang.annotation.Inherited;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -52,8 +53,8 @@ public abstract class Mote {
         this.moteId = moteId;
         this.x = x;
         this.y = y;
-        registerIpAddressList = new LinkedList<>();
-        registerPortList = new LinkedList<>();
+        registerIpAddressList = new ArrayList<>();
+        registerPortList = new ArrayList<>();
         energyStatistician = new EnergyStatistician(this);
         this.moteClass = moteClass;
     }
@@ -96,7 +97,7 @@ public abstract class Mote {
             Mote mote = neighbor.getMote();
             //无论该节点的ip和端口信息是否满足 数据包的目的地要求 我们都将其进行传输
             simulator.getEventManager().pushEvent(
-                    new TransmissionEvent(transmissionManager.calcTransmissionTime(distance) + simulator.getNowTime(),
+                    new TransmissionEvent(transmissionManager.calcTransmissionTime(distance) + simulator.getTime(),
                             mote, packet)
             );
         }
@@ -242,6 +243,26 @@ public abstract class Mote {
 
     public Statistician<Float> getEnergyStatistician() {
         return energyStatistician;
+    }
+
+    /**
+     * 返回可行Ip地址
+     *
+     * @param index 下标
+     * @return 可行Ip地址
+     */
+    public String getAddress(int index) {
+        return registerIpAddressList.get(index);
+    }
+
+    /**
+     * 取得可行端口
+     *
+     * @param index 下标
+     * @return 可行端口
+     */
+    public int getPort(int index) {
+        return registerPortList.get(index);
     }
 
     // setters //

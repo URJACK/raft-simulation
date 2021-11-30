@@ -24,7 +24,7 @@ public abstract class TimeoutEvent extends Event {
      */
     public TimeoutEvent(long spanTime, boolean isLoop, NetSimulator simulator, Mote selfMote) {
         // 事件本身要有的延迟 + 仿真器当前的时间 == 触发时间
-        super(spanTime + simulator.getNowTime());
+        super(spanTime + simulator.getTime());
         this.spanTime = spanTime;
         this.simulator = simulator;
         this.selfMote = selfMote;

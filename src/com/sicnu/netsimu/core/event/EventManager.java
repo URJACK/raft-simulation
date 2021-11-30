@@ -60,12 +60,14 @@ public class EventManager {
         assert ev != null;
         simulator.setTime(ev.getTriggerTime());
         ev.work();
+        //每当触发一个事件 就开始输出信息+
+        simulator.getInfoOutputManager().outputInfo();
         //对带loop的TimeoutEvent事件做循环处理
         if (ev instanceof TimeoutEvent) {
             TimeoutEvent timeoutEvent = (TimeoutEvent) ev;
             if (timeoutEvent.isLoop()) {
                 //如果是一个循环事件 我们重算其的触发时间。
-                timeoutEvent.setTriggerTime(timeoutEvent.getSpanTime() + simulator.getNowTime());
+                timeoutEvent.setTriggerTime(timeoutEvent.getSpanTime() + simulator.getTime());
                 //并将其再次加入队列
                 queue.add(timeoutEvent);
             }

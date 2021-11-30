@@ -16,7 +16,6 @@ import java.util.Deque;
  * 仿真核心类
  * 属于所有类的中心
  */
-@Data
 public class NetSimulator {
     //记录当前仿真世界的时间
     long time = 0;
@@ -56,13 +55,6 @@ public class NetSimulator {
     }
 
     /**
-     * @return 当前仿真世界的时间
-     */
-    public long getNowTime() {
-        return time;
-    }
-
-    /**
      * 模拟启动
      */
     public void run() {
@@ -90,4 +82,38 @@ public class NetSimulator {
     public void equipSummarizer(Summarizer summarizer) {
         this.summarizer = summarizer;
     }
+
+    // setters & getters //
+
+    /**
+     * @return 当前仿真世界的时间
+     */
+    public long getTime() {
+        return time;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
+    }
+
+    public TransmissionManager getTransmissionManager() {
+        return transmissionManager;
+    }
+
+    public MoteManager getMoteManager() {
+        return moteManager;
+    }
+
+    public EventManager getEventManager() {
+        return eventManager;
+    }
+
+    public InfoOutputManager getInfoOutputManager() {
+        return infoOutputManager;
+    }
+
+    public Summarizer getSummarizer() {
+        return summarizer;
+    }
+
 }
