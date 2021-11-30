@@ -21,7 +21,6 @@ import java.util.List;
  * 节点对象 是我们仿真程序中的一个基础类
  * 每个节点对象之间的各类交互，就是我们的仿真的基础
  */
-@Data
 public abstract class Mote {
     protected NetSimulator simulator;
     protected int moteId;
@@ -38,14 +37,10 @@ public abstract class Mote {
      */
     protected Statistician<Float> energyStatistician;
 
-    public Mote() throws Exception {
-        /**
-         * 不建议使用该方式创建Mote
-         */
-        throw new Exception("不建议使用该方式创建Mote");
-    }
-
     /**
+     * 其他节点的构造函数只能在这基础上实现
+     * 同时构造函数传入的参数不可以改变
+     *
      * @param simulator 模拟器对象引用
      * @param moteId    节点的id
      * @param x         节点的x坐标
@@ -225,4 +220,33 @@ public abstract class Mote {
         }
         return null;
     }
+
+    // getters  //
+
+    public NetSimulator getSimulator() {
+        return simulator;
+    }
+
+    public int getMoteId() {
+        return moteId;
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public Statistician<Float> getEnergyStatistician() {
+        return energyStatistician;
+    }
+
+    // setters //
+
+    public void setSimulator(NetSimulator simulator) {
+        this.simulator = simulator;
+    }
+
 }

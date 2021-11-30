@@ -55,7 +55,7 @@ public abstract class CommandTranslator {
         basicCommandTypeHashset.add("DISPLAY_CON");
         basicCommandTypeHashset.add("SUMMARY");
         //对指令长度集进行初始化 ---- [所有命令必须]
-        basicCommandLengthHashMap.put("NODE_ADD", 5);
+        basicCommandLengthHashMap.put("NODE_ADD", 6);
         basicCommandLengthHashMap.put("NODE_DEL", 3);
         basicCommandLengthHashMap.put("NODE_BOOT", 3);
         basicCommandLengthHashMap.put("NODE_SHUT", 3);
@@ -142,7 +142,7 @@ public abstract class CommandTranslator {
                 case "NODE_ADD" ->
                         //生成 “添加节点”
                         new NodeAddCommand(simulator, timeStamp, commandType, Integer.parseInt(commandStrings[2]),
-                                Float.parseFloat(commandStrings[3]), Float.parseFloat(commandStrings[4]));
+                                Float.parseFloat(commandStrings[3]), Float.parseFloat(commandStrings[4]), commandStrings[5]);
                 case "NODE_DEL" ->
                         //生成“删除节点”
                         new NodeDelCommand(simulator, timeStamp, commandType, Integer.parseInt(commandStrings[2]));

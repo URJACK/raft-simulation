@@ -16,6 +16,8 @@ public class NodeAddCommand extends Command {
     // 添加节点后的位置
     float x;
     float y;
+    // 添加的节点类型字串
+    private String nodeClass;
 
     /**
      * 添加节点操作构造函数
@@ -26,12 +28,14 @@ public class NodeAddCommand extends Command {
      * @param nodeId    节点id
      * @param x         节点x坐标
      * @param y         节点y坐标
+     * @param nodeClass 节点类型
      */
-    public NodeAddCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, float x, float y) {
+    public NodeAddCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, float x, float y, String nodeClass) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
         this.x = x;
         this.y = y;
+        this.nodeClass = nodeClass;
     }
 
     @Override
@@ -40,7 +44,7 @@ public class NodeAddCommand extends Command {
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
         if (!moteManager.containMote(nodeId)) {
             //如果当前节点的id已经存在 则无法进行添加节点
-            Mote newMote = moteManager.addMote(nodeId, x, y);
+            Mote newMote = moteManager.addMote(nodeId, x, y, nodeClass);
             if (newMote == null) {
                 //创建节点失败
                 return;
