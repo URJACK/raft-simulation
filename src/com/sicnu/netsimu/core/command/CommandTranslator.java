@@ -134,7 +134,7 @@ public abstract class CommandTranslator {
         } else {
             //读取到当前的指令参数长度
             int commandLen = basicCommandLengthHashMap.get(commandStrings[1]);
-            if (commandStrings.length != commandLen) {
+            if (commandStrings.length < commandLen) {
                 //如果指令长度 与应有长度 不匹配
                 throw new CommandParseException("Command's length is not matched", commandType);
             }

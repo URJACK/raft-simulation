@@ -11,6 +11,7 @@ import lombok.Data;
  */
 @Data
 public class NodeAddCommand extends Command {
+    Object[] args;
     // 被添加的节点id
     int nodeId;
     // 添加节点后的位置
@@ -30,12 +31,13 @@ public class NodeAddCommand extends Command {
      * @param y         节点y坐标
      * @param nodeClass 节点类型
      */
-    public NodeAddCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, float x, float y, String nodeClass) {
+    public NodeAddCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, float x, float y, String nodeClass, Object... args) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
         this.x = x;
         this.y = y;
         this.nodeClass = nodeClass;
+        this.args = args;
     }
 
     @Override
@@ -44,7 +46,7 @@ public class NodeAddCommand extends Command {
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
         if (!moteManager.containMote(nodeId)) {
             //如果当前节点的id已经存在 则无法进行添加节点
-            Mote newMote = moteManager.addMote(nodeId, x, y, nodeClass);
+            Mote newMote = moteManager.addMote(nodeId, x, y, nodeClass, args);
             if (newMote == null) {
                 //创建节点失败
                 return;

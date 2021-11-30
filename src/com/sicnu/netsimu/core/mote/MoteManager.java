@@ -46,9 +46,10 @@ public class MoteManager {
      * @param x             节点的x坐标
      * @param y             节点的y坐标
      * @param nodeClassPath 节点类型的反射地址
+     * @param args          额外参数列表
      * @return 成功添加的新节点（失败则为null）
      */
-    public Mote addMote(int nodeId, float x, float y, String nodeClassPath) {
+    public Mote addMote(int nodeId, float x, float y, String nodeClassPath, Object... args) {
         if (moteRecorder.containsKey(nodeId)) {
             //如果已经存在了这个节点
             return null;
@@ -58,7 +59,7 @@ public class MoteManager {
             Constructor[] declaredConstructors = nodeClass.getDeclaredConstructors();
             for (Constructor constructor : declaredConstructors) {
 //                System.out.println(constructor.getName());
-                Mote mote = (Mote) constructor.newInstance(simulator, nodeId, x, y);
+                Mote mote = (Mote) constructor.newInstance(simulator, nodeId, x, y, args);
 //                NormalMote mote = new NormalMote(simulator, nodeId, x, y);
                 motes.add(mote);
                 moteRecorder.put(nodeId, mote);

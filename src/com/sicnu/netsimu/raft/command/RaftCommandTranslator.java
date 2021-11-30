@@ -57,7 +57,7 @@ public class RaftCommandTranslator extends CommandTranslator {
         } else {
             //读取到当前的指令参数长度
             int commandLen = extendsCommandLengthHashMap.get(commandStrings[1]);
-            if (commandStrings.length != commandLen) {
+            if (commandStrings.length < commandLen) {
                 //如果指令长度 与应有长度 不匹配
                 throw new CommandParseException("Command's length is not matched", commandType);
             }
