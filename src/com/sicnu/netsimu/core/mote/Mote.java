@@ -47,7 +47,7 @@ public abstract class Mote {
      * @param y         节点的y坐标
      * @param args      潜在的额外参数
      */
-    public Mote(NetSimulator simulator, int moteId, float x, float y, Class moteClass, Object... args) {
+    public Mote(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
         this.simulator = simulator;
         this.moteId = moteId;
         this.x = x;

@@ -138,11 +138,14 @@ public abstract class CommandTranslator {
                 //如果指令长度 与应有长度 不匹配
                 throw new CommandParseException("Command's length is not matched", commandType);
             }
+
+            String[] externArgs = extractExternArgs(commandStrings, commandLen);
             return switch (commandType) {
                 case "NODE_ADD" ->
                         //生成 “添加节点”
                         new NodeAddCommand(simulator, timeStamp, commandType, Integer.parseInt(commandStrings[2]),
-                                Float.parseFloat(commandStrings[3]), Float.parseFloat(commandStrings[4]), commandStrings[5]);
+                                Float.parseFloat(commandStrings[3]), Float.parseFloat(commandStrings[4]), commandStrings[5],
+                                externArgs);
                 case "NODE_DEL" ->
                         //生成“删除节点”
                         new NodeDelCommand(simulator, timeStamp, commandType, Integer.parseInt(commandStrings[2]));
@@ -171,6 +174,21 @@ public abstract class CommandTranslator {
                 default -> throw new CommandParseException("No Matched Type");
             };
         }
+    }
+
+    /**
+     * 解析提取额外参数（将命令长度抛去后的所有字符串）
+     *
+     * @param commandStrings 原始解析命令行数组
+     * @param commandLen     该命令对应的长度
+     * @return 额外参数数组
+     */
+    protected String[] extractExternArgs(String[] commandStrings, int commandLen) {
+        String[] externArgs = new String[commandStrings.length - commandLen];
+        for (int i = 0; i < externArgs.length; i++) {
+            externArgs[i] = commandStrings[commandLen + i];
+        }
+        return externArgs;
     }
 
     // abstract Methods //

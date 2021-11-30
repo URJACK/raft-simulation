@@ -49,7 +49,7 @@ public class MoteManager {
      * @param args          额外参数列表
      * @return 成功添加的新节点（失败则为null）
      */
-    public Mote addMote(int nodeId, float x, float y, String nodeClassPath, Object... args) {
+    public Mote addMote(int nodeId, float x, float y, String nodeClassPath, String... args) {
         if (moteRecorder.containsKey(nodeId)) {
             //如果已经存在了这个节点
             return null;

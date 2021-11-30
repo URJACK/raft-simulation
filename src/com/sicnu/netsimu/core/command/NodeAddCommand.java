@@ -11,7 +11,7 @@ import lombok.Data;
  */
 @Data
 public class NodeAddCommand extends Command {
-    Object[] args;
+    String[] args;
     // 被添加的节点id
     int nodeId;
     // 添加节点后的位置
@@ -31,7 +31,7 @@ public class NodeAddCommand extends Command {
      * @param y         节点y坐标
      * @param nodeClass 节点类型
      */
-    public NodeAddCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, float x, float y, String nodeClass, Object... args) {
+    public NodeAddCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, float x, float y, String nodeClass, String... args) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
         this.x = x;

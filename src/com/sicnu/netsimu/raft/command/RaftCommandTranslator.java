@@ -61,6 +61,7 @@ public class RaftCommandTranslator extends CommandTranslator {
                 //如果指令长度 与应有长度 不匹配
                 throw new CommandParseException("Command's length is not matched", commandType);
             }
+            String[] extraArgs = extractExternArgs(commandStrings, commandLen);
             return switch (commandType) {
                 case "RAFT_ELECT" ->
                         // 生成控制台展示接口

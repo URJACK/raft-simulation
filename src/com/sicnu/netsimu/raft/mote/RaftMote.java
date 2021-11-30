@@ -29,7 +29,7 @@ public class RaftMote extends Mote {
      * @param x         节点x坐标
      * @param y         节点y坐标
      */
-    public RaftMote(NetSimulator simulator, int moteId, float x, float y, Object... args) {
+    public RaftMote(NetSimulator simulator, int moteId, float x, float y, String... args) {
         super(simulator, moteId, x, y, RaftMote.class);
         //监听ip地址
         String ipStr = IP_PREFIX + moteId;
@@ -38,6 +38,8 @@ public class RaftMote extends Mote {
         call("listenIp", ipStr);
         //监听该端口
         call("listenPort", RAFT_PORT);
+        Integer n = Integer.parseInt(args[0]);
+        System.out.println("Raft MOTE NUM " + n);
     }
 
     @Override
