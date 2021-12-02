@@ -2,16 +2,17 @@ package com.sicnu.netsimu.raft.role;
 
 import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
 import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.raft.mote.RaftMote;
 
 public abstract class RaftRole {
-    protected Mote mote;
+    protected RaftMote mote;
     // 当前节点的角色
     protected int role;
     // 当前节点的个数
     protected int NODE_NUM;
-    public static int ROLE_FOLLOWER = 0;
-    public static int ROLE_CANDIDATE = 1;
-    public static int ROLE_LEADER = 2;
+    public static final int ROLE_FOLLOWER = 0;
+    public static final int ROLE_CANDIDATE = 1;
+    public static final int ROLE_LEADER = 2;
 
     /**
      * NODE_NUM会在RaftRole被初始化
@@ -20,7 +21,7 @@ public abstract class RaftRole {
      * @param mote    所属的节点引用
      * @param nodeNum Raft节点个数
      */
-    public RaftRole(Mote mote, int nodeNum) {
+    public RaftRole(RaftMote mote, int nodeNum) {
         this.mote = mote;
         this.NODE_NUM = nodeNum;
     }

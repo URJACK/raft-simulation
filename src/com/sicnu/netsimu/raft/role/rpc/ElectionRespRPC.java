@@ -1,16 +1,23 @@
-package com.sicnu.netsimu.raft.rpc;
+package com.sicnu.netsimu.raft.role.rpc;
 
+import lombok.Data;
+
+@Data
 public class ElectionRespRPC implements RPCConvert {
-    char type;
+    int type;
     int term;
     int voteGranted;
     int senderId;
 
-    public ElectionRespRPC(char type, int term, int voteGranted, int senderId) {
+    public ElectionRespRPC(int type, int term, int voteGranted, int senderId) {
         this.type = type;
         this.term = term;
         this.voteGranted = voteGranted;
         this.senderId = senderId;
+    }
+
+    public ElectionRespRPC(String data) {
+        parse(data);
     }
 
     @Override
@@ -32,7 +39,7 @@ public class ElectionRespRPC implements RPCConvert {
         if (splits.length != 4) {
             new Exception("Parse Exception the elements.length is not 4").printStackTrace();
         }
-        type = splits[0].charAt(0);
+        type = Integer.parseInt(splits[0]);
         term = Integer.parseInt(splits[1]);
         voteGranted = Integer.parseInt(splits[2]);
         senderId = Integer.parseInt(splits[3]);

@@ -42,7 +42,7 @@ public class RaftMote extends Mote {
     public RaftMote(NetSimulator simulator, int moteId, float x, float y, String... args) {
         super(simulator, moteId, x, y, RaftMote.class);
         //监听ip地址 合成每个节点的专属Ip地址
-        String ipStr = RaftUtils.getIpStr(IP_PREFIX, moteId);
+        String ipStr = RaftUtils.convertIpAddressWithMoteId(IP_PREFIX, moteId);
         //监听该ip地址
 //        listenIp(ipStr);
         call("listenIp", ipStr);

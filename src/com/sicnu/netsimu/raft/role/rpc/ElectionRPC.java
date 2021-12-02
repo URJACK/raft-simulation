@@ -1,7 +1,11 @@
-package com.sicnu.netsimu.raft.rpc;
+package com.sicnu.netsimu.raft.role.rpc;
 
-public class ElectionRPC implements RPCConvert {
-    char type;
+import lombok.Data;
+
+@Data
+public class ElectionRPC implements RPCConvert, RequestRPC {
+    int type;
+    int term;
     int candidateId;
     int lastLogIndex;
     int lastLogTerm;
@@ -10,8 +14,9 @@ public class ElectionRPC implements RPCConvert {
         parse(compressedData);
     }
 
-    public ElectionRPC(char type, int candidateId, int lastLogIndex, int lastLogTerm) {
+    public ElectionRPC(int type, int term, int candidateId, int lastLogIndex, int lastLogTerm) {
         this.type = type;
+        this.term = term;
         this.candidateId = candidateId;
         this.lastLogIndex = lastLogIndex;
         this.lastLogTerm = lastLogTerm;
@@ -21,6 +26,8 @@ public class ElectionRPC implements RPCConvert {
     public String convert() {
         StringBuilder sb = new StringBuilder();
         sb.append(type);
+        sb.append(",");
+        sb.append(term);
         sb.append(",");
         sb.append(candidateId);
         sb.append(",");
@@ -33,22 +40,18 @@ public class ElectionRPC implements RPCConvert {
     @Override
     public void parse(String str) {
         String[] splits = str.split(",");
-        if (splits.length != 4) {
+        if (splits.length != 5) {
             new Exception("Parse Exception the elements.length is not 4").printStackTrace();
         }
-        type = splits[0].charAt(0);
-        candidateId = Integer.parseInt(splits[1]);
-        lastLogIndex = Integer.parseInt(splits[2]);
-        lastLogTerm = Integer.parseInt(splits[3]);
+        type = Integer.parseInt(splits[0]);
+        term = Integer.parseInt(splits[1]);
+        candidateId = Integer.parseInt(splits[2]);
+        lastLogIndex = Integer.parseInt(splits[3]);
+        lastLogTerm = Integer.parseInt(splits[4]);
     }
 
     @Override
-    public String toString() {
-        return "ElectionRPC{" +
-                "type=" + type +
-                ", candidateId=" + candidateId +
-                ", lastLogIndex=" + lastLogIndex +
-                ", lastLogTerm=" + lastLogTerm +
-                '}';
+    public int getSenderId() {
+        return candidateId;
     }
 }

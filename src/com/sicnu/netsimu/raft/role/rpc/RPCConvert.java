@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.raft.rpc;
+package com.sicnu.netsimu.raft.role.rpc;
 
 public interface RPCConvert {
     String convert();
