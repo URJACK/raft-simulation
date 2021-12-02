@@ -2,11 +2,16 @@ package com.sicnu.netsimu.raft.role;
 
 import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
+import com.sicnu.netsimu.raft.RaftUtils;
 import com.sicnu.netsimu.raft.annotation.NotNull;
 import com.sicnu.netsimu.raft.exception.ParameterException;
 import com.sicnu.netsimu.raft.mote.RaftMote;
+import com.sicnu.netsimu.raft.role.log.RaftLogTable;
 import com.sicnu.netsimu.raft.role.rpc.*;
 
+/**
+ * 基础Raft算法实现
+ */
 public class BasicRaftRole extends RaftRole {
 
     /**
@@ -35,6 +40,9 @@ public class BasicRaftRole extends RaftRole {
      * 动作时间actionTime 会基于 mote.getTime() + random(ELECT_SPAN_TIME) 进行设置
      */
     static final long MAX_ELECT_SPAN_TIME = 500;
+    /**
+     * 超时选举时间浮动率
+     */
     static final float MAX_ELECT_SPAN_TIME_FLOAT = 0.1f;
 
     /**
@@ -42,7 +50,6 @@ public class BasicRaftRole extends RaftRole {
      * 如果超过该时长，还未收集到足够的选票，对于本人来说就选举失败了
      */
     static final long MAX_CANDIDATE_HOLD_ON_SPAN_TIME = 300;
-
 
     /**
      * NODE_NUM会在RaftRole被初始化
@@ -64,7 +71,7 @@ public class BasicRaftRole extends RaftRole {
         candidateVariable = new CandidateVariable();
     }
 
-    // TIMER 系列 <接口> //
+    // 抽象动作 //
 
     /**
      * 外部时钟调用函数
@@ -108,8 +115,6 @@ public class BasicRaftRole extends RaftRole {
         });
     }
 
-    // 抽象动作 //
-
     /**
      * 处理数据包
      * 数据包的内容，应当是一个RPC
@@ -119,6 +124,7 @@ public class BasicRaftRole extends RaftRole {
     @Override
     public void handlePacket(TransmissionPacket packet) {
         String data = packet.getData();
+        //从数据包中取得第一个条数据 --- Raft数据包 标识
         int rpcType = RaftUtils.getFirstValFromString(data);
         switch (rpcType) {
             case RPC.RPC_ELECT:
@@ -140,16 +146,26 @@ public class BasicRaftRole extends RaftRole {
 
     // 4个不同数据包的处理转发函数 //
 
+    /**
+     * 接受到心跳包的回复
+     *
+     * @param packet 数据包（心跳包）
+     */
     private void receiveRPCHeartBeatsResp(TransmissionPacket packet) {
 
     }
 
+    /**
+     * 接受到心跳包 响应数据包
+     *
+     * @param packet
+     */
     private void receiveRPCHeartBeats(TransmissionPacket packet) {
 
     }
 
     /**
-     * 接受到了返回的数据包
+     * 接受到了选举数据包的 响应数据包
      *
      * @param packet
      */
@@ -167,7 +183,7 @@ public class BasicRaftRole extends RaftRole {
     }
 
     /**
-     * 接收到一个数据包
+     * 接收到一个选举数据包
      * 会触发动作计时刷新
      *
      * @param packet 数据包
@@ -195,6 +211,8 @@ public class BasicRaftRole extends RaftRole {
         }
     }
 
+    // 节点内部接口 //
+
     /**
      * 检查该选举RPC是否满足要求
      *
@@ -220,8 +238,6 @@ public class BasicRaftRole extends RaftRole {
         }
         return true;
     }
-
-    // 节点内部接口 //
 
     /**
      * 是否有权力执行 选举检查
@@ -288,6 +304,9 @@ public class BasicRaftRole extends RaftRole {
          * 作为一个Candidate 取得的vote数量
          */
         int gotVoteNum;
+        /**
+         * Candidate的触发限制时长，如果超过了这个时间，选举就失败了
+         */
         long candidateActionLimitTime;
 
         public CandidateVariable() {
@@ -295,6 +314,10 @@ public class BasicRaftRole extends RaftRole {
             candidateActionLimitTime = 0;
         }
 
+        /**
+         * 清除getVoteNum和candidateActionLimitTime
+         * 这两个变量
+         */
         public void clearVoteAndActionTime() {
             gotVoteNum = 0;
             candidateActionLimitTime = 0;
@@ -323,6 +346,11 @@ public class BasicRaftRole extends RaftRole {
             }
         }
 
+        /**
+         * 检查是否取得了足够多选票，从而成为Leader
+         *
+         * @return true == 可以成为 Leader
+         */
         public boolean hasGotEnoughVoteToBeLeader() {
             return gotVoteNum > NODE_NUM / 2;
         }

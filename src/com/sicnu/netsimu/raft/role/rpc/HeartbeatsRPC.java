@@ -1,7 +1,8 @@
 package com.sicnu.netsimu.raft.role.rpc;
 
+import com.sicnu.netsimu.raft.annotation.AllowNull;
 import com.sicnu.netsimu.raft.exception.ParseException;
-import com.sicnu.netsimu.raft.role.RaftLogItem;
+import com.sicnu.netsimu.raft.role.log.RaftLogItem;
 import lombok.Data;
 
 /**
@@ -11,19 +12,45 @@ import lombok.Data;
  */
 @Data
 public class HeartbeatsRPC implements RPCConvert, RequestRPC {
+    /**
+     * RPC 类型字段
+     */
     int type;
+    /**
+     * 当前Leader节点的任期号
+     */
     int term;
+    /**
+     * 当前Leader自身的节点Id号
+     */
     int leaderId;
+    /**
+     * 最新日志之前的 index
+     */
     int prevIndex;
+    /**
+     * 最新日志之前的 term
+     */
     int prevTerm;
     //    int hasEntry;
     RaftLogItem logItem;
 
+    /**
+     * @param compressedData 实际传输过程中使用的压缩字符串
+     */
     public HeartbeatsRPC(String compressedData) {
         parse(compressedData);
     }
 
-    public HeartbeatsRPC(int type, int term, int leaderId, int prevIndex, int prevTerm, RaftLogItem logItem) {
+    /**
+     * @param type      RPC类型字段
+     * @param term      Leader节点自身的任期号
+     * @param leaderId  Leader节点自身的Id号
+     * @param prevIndex 最新日志的index
+     * @param prevTerm  最新日志的term
+     * @param logItem   心跳包可以传入logItem
+     */
+    public HeartbeatsRPC(int type, int term, int leaderId, int prevIndex, int prevTerm, @AllowNull RaftLogItem logItem) {
         this.type = type;
         this.term = term;
         this.leaderId = leaderId;
@@ -32,6 +59,9 @@ public class HeartbeatsRPC implements RPCConvert, RequestRPC {
         this.logItem = logItem;
     }
 
+    /**
+     * 将自身的数据转为字符串，用于输出传输
+     */
     @Override
     public String convert() {
         StringBuilder sb = new StringBuilder();
@@ -59,6 +89,11 @@ public class HeartbeatsRPC implements RPCConvert, RequestRPC {
         return sb.toString();
     }
 
+    /**
+     * 解析 压缩字符串 ，并将数据放入自己的成员变量中
+     *
+     * @param str 压缩字符串
+     */
     @Override
     public void parse(String str) {
         String[] splits = str.split(",");
@@ -81,6 +116,9 @@ public class HeartbeatsRPC implements RPCConvert, RequestRPC {
         }
     }
 
+    /**
+     * @return 取得发送者的Id
+     */
     @Override
     public int getSenderId() {
         return leaderId;

@@ -7,7 +7,7 @@ import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.raft.role.BasicRaftRole;
 import com.sicnu.netsimu.raft.role.RaftRole;
-import com.sicnu.netsimu.raft.role.RaftUtils;
+import com.sicnu.netsimu.raft.RaftUtils;
 
 /**
  * Raft节点 的protected方法名

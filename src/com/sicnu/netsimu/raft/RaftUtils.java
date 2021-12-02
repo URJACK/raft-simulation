@@ -1,7 +1,10 @@
-package com.sicnu.netsimu.raft.role;
+package com.sicnu.netsimu.raft;
 
 import com.sicnu.netsimu.raft.exception.ParameterException;
 
+/**
+ * Raft算法运行过程中的相关工具函数
+ */
 public class RaftUtils {
 
     /**

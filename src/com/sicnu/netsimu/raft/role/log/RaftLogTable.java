@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.raft.role;
+package com.sicnu.netsimu.raft.role.log;
 
 import java.util.ArrayList;
 
@@ -7,6 +7,9 @@ import java.util.ArrayList;
  * item的编号是从1开始的
  */
 public class RaftLogTable {
+    /**
+     * 日志的存储结构
+     */
     ArrayList<RaftLogItem> items;
 
     public RaftLogTable() {

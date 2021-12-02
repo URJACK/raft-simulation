@@ -55,7 +55,7 @@ public class InfoOutputManager {
         @Override
         public String toString() {
             return time + ", " +
-                    "Mote " + moteId + ":" +
+                    "Mote " + moteId + ": " +
                     info;
         }
     }

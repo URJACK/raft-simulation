@@ -2,15 +2,28 @@ package com.sicnu.netsimu.raft.role;
 
 import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
 import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.raft.RaftUtils;
 import com.sicnu.netsimu.raft.mote.RaftMote;
 import com.sicnu.netsimu.raft.role.rpc.RPCConvert;
 
+/**
+ * Raft发送器
+ */
 public class RaftSender {
-
+    /**
+     * 记录的Raft节点个数
+     */
     private int NODE_NUM;
-    private Mote mote;
+    /**
+     * 记录Raft节点的引用
+     */
+    private RaftMote mote;
 
-    public RaftSender(Mote mote, int NODE_NUM) {
+    /**
+     * @param mote     Raft的节点引用
+     * @param NODE_NUM Raft算法节点个数
+     */
+    public RaftSender(RaftMote mote, int NODE_NUM) {
         this.mote = mote;
         this.NODE_NUM = NODE_NUM;
     }
