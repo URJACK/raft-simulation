@@ -56,6 +56,11 @@ public abstract class RaftRole {
     public abstract void TIMER_ELECT();
 
     /**
+     * Leader发送心跳包
+     */
+    public abstract void TIMER_BEATS();
+
+    /**
      * 处理数据包
      * 数据包的内容，应当是一个RPC
      *

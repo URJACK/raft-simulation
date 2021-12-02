@@ -28,7 +28,7 @@ public class RaftMote extends Mote {
      * 触发选举操作的检查时间
      * 触发该时间后，未必就会进行选举，它会调用role去检查是否可以进行选举。
      */
-    private static final int ELECT_TRIGGER_TIME = 100;
+    private static final int TRIGGER_TIME = 100;
 
     /**
      * 其他节点的构造函数只能在这基础上实现
@@ -59,11 +59,14 @@ public class RaftMote extends Mote {
     @Override
     @EnergyCost(10f)
     public void init() {
-        setTimeout(new TimeoutEvent(ELECT_TRIGGER_TIME, true, simulator, this) {
+        //每隔 ELECT_SPAN_TIME
+        setTimeout(new TimeoutEvent(TRIGGER_TIME, true, simulator, this) {
             @Override
             public void work() {
-                //每隔 ELECT_SPAN_TIME 会尝试读取RPC间隔时长
+                // 尝试进行选举动作
                 raftRole.TIMER_ELECT();
+                // 尝试发送心跳包
+                raftRole.TIMER_BEATS();
             }
         });
     }

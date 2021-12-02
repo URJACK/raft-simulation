@@ -79,11 +79,11 @@ public class BasicRaftRole extends RaftRole {
      */
     @Override
     public void TIMER_ELECT() {
-        if (!shouldElectCheck()) {
+        if (!constantVariable.shouldElectCheck()) {
             return;
         }
         // 重置一下动作时间
-        constantVariable.refreshActionTime();
+        constantVariable.refreshElectionActionTime();
         // 选举之前，清空一些状态变量
         constantVariable.clearVotedAndLeader();
         // 开始竞选之前，对参选变量进行清空
@@ -113,6 +113,32 @@ public class BasicRaftRole extends RaftRole {
                 candidateVariable.candidateElectionEnding();
             }
         });
+    }
+
+    /**
+     * Leader发送心跳包
+     */
+    @Override
+    public void TIMER_BEATS() {
+        if (!leaderVariable.shouldBeatsCheck()) {
+            return;
+        }
+        // 如果可以发送心跳包 自身也要不断刷新选举时长，总而避免触发再次选举动作
+        // 当然这里有两种处理方式，另一种方式，也可以在 shouldElectCheck 对身份进行校验
+        constantVariable.refreshElectionActionTime();
+        // 获得自己当前最新的日志信息
+        int lastLogIndex = raftLogTable.getLastLogIndex();
+        int lastLogTerm = raftLogTable.getLastLogTerm();
+        for (int i = 0; i < NODE_NUM; i++) {
+            if (i + 1 == mote.getMoteId()) {
+                // 不会发送给自己
+                continue;
+            }
+            HeartbeatsRPC rpc = new HeartbeatsRPC(RPC.RPC_HEARTBEATS,
+                    constantVariable.currentTerm, mote.getMoteId(),
+                    0, 0, null);
+            raftSender.uniCast(i + 1, rpc);
+        }
     }
 
     /**
@@ -161,7 +187,11 @@ public class BasicRaftRole extends RaftRole {
      * @param packet
      */
     private void receiveRPCHeartBeats(TransmissionPacket packet) {
-
+        String data = packet.getData();
+        HeartbeatsRPC rpc = new HeartbeatsRPC(data);
+        //刷新一下动作时长，防止触发选举
+        constantVariable.refreshElectionActionTime();
+        mote.print("DEBUG RECEIVE HEARTBEATS......");
     }
 
     /**
@@ -204,7 +234,7 @@ public class BasicRaftRole extends RaftRole {
                         constantVariable.currentTerm, 1, mote.getMoteId());
                 raftSender.uniCast(rpc.getSenderId(), respRpc);
                 // 有效操作后 重置一下动作时间
-                constantVariable.refreshActionTime();
+                constantVariable.refreshElectionActionTime();
             } catch (ParameterException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -237,20 +267,6 @@ public class BasicRaftRole extends RaftRole {
             return false;
         }
         return true;
-    }
-
-    /**
-     * 是否有权力执行 选举检查
-     *
-     * @return true == 可以进行选举
-     */
-    private boolean shouldElectCheck() {
-        long time = mote.getSimulator().getTime();
-        //如果超时了 此时才可以进行选举
-        if (time > constantVariable.electActionLimitTime) {
-            return true;
-        }
-        return false;
     }
 
     // 内部类定义部分 //
@@ -292,6 +308,15 @@ public class BasicRaftRole extends RaftRole {
             candidateVariable.clearVoteAndActionTime();
             constantVariable.clearVotedAndLeader();
             mote.print("I become the leader");
+        }
+
+        /**
+         * 检查是否有资格发送HeartBeats包
+         *
+         * @return
+         */
+        public boolean shouldBeatsCheck() {
+            return role == ROLE_LEADER;
         }
     }
 
@@ -394,7 +419,7 @@ public class BasicRaftRole extends RaftRole {
             currentTerm = 0;
             votedFor = 0;
             currentLeaderId = 0;
-            refreshActionTime();
+            refreshElectionActionTime();
         }
 
         /**
@@ -407,10 +432,26 @@ public class BasicRaftRole extends RaftRole {
         }
 
         /**
-         * 依据 mote.simulator 中的时间
-         * 进而重置 constantVariable 中的动作时间
+         * 刷新Election的触发时间
+         * 应该调用的场景：
+         * <p>
+         * (1)·每当你接收到 RPC_HEARTBEATS 和 RPC_ELECT 的时候，
+         * <p>
+         * (2)·如果仅有条件(1)，Leader自身是不会接受到这两个数据包的。
+         * 那么Leader也会因为时长的到达而触发Elect逻辑。
+         * 所以我们可以让TIMER_BEATS() 方法也调用该方法
+         * <p>
+         * 触发原理如下：
+         * 使用RaftUtils.floatValue(MAX_ELECT_SPAN_TIME ,MAX_ELECT_SPAN_TIME_FLOAT)
+         * 计算出增量时间，
+         * <p>
+         * 让 mote.simulator.getTime() 得到的当前时间，去加上增量时间。
+         * 进而得到 constantVariable 中的新的 electActionLimitTime。
+         *
+         * @see RaftUtils
+         * @see com.sicnu.netsimu.core.NetSimulator
          */
-        private void refreshActionTime() {
+        private void refreshElectionActionTime() {
             //重新记录下动作时间
             electActionLimitTime = mote.getSimulator().getTime() +
                     RaftUtils.floatValue(MAX_ELECT_SPAN_TIME, MAX_ELECT_SPAN_TIME_FLOAT);
@@ -451,6 +492,21 @@ public class BasicRaftRole extends RaftRole {
                 throw new ClassNotFoundException("没有找到合适的类");
             }
             mote.print("I become the follower ( term is " + term + " , leader is: " + rpc.getSenderId() + " )");
+        }
+
+
+        /**
+         * 是否有权力执行 选举检查
+         *
+         * @return true == 可以进行选举
+         */
+        public boolean shouldElectCheck() {
+            long time = mote.getSimulator().getTime();
+            //如果超时了 此时才可以进行选举
+            if (time > electActionLimitTime) {
+                return true;
+            }
+            return false;
         }
 
         /**
