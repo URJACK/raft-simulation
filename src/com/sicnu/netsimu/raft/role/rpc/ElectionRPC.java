@@ -80,6 +80,7 @@ public class ElectionRPC implements RPCConvert, RequestRPC {
         String[] splits = str.split(",");
         if (splits.length != 5) {
             new Exception("Parse Exception the elements.length is not 4").printStackTrace();
+            return;
         }
         type = Integer.parseInt(splits[0]);
         term = Integer.parseInt(splits[1]);

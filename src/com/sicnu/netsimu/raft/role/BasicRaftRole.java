@@ -6,7 +6,9 @@ import com.sicnu.netsimu.raft.RaftUtils;
 import com.sicnu.netsimu.raft.annotation.NotNull;
 import com.sicnu.netsimu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.raft.exception.ParameterException;
+import com.sicnu.netsimu.raft.exception.RaftRuntimeException;
 import com.sicnu.netsimu.raft.mote.RaftMote;
+import com.sicnu.netsimu.raft.role.log.RaftLogItem;
 import com.sicnu.netsimu.raft.role.log.RaftLogTable;
 import com.sicnu.netsimu.raft.role.rpc.*;
 
@@ -89,7 +91,6 @@ public class BasicRaftRole extends RaftRole {
         constantVariable.clearVotedAndLeader();
         // 开始竞选之前，对参选变量进行清空
         candidateVariable.clearVoteAndActionTime();
-        mote.print("DEBUG BasicRaftRole RPC_ELECT");
         // 记录的Term增加
         constantVariable.currentTerm++;
         // 角色切换为 Candidate
@@ -118,6 +119,10 @@ public class BasicRaftRole extends RaftRole {
 
     /**
      * Leader发送心跳包
+     * 有许多逻辑需要进行交互完成，相关的处理逻辑参考以下两个方法：
+     * <p>
+     * receiveRPCHeartBeats
+     * receiveRPCHeartBeatsResp
      */
     @Override
     public void TIMER_BEATS() {
@@ -129,19 +134,16 @@ public class BasicRaftRole extends RaftRole {
         constantVariable.refreshElectionActionTime();
         // 获得自己当前最新的日志信息
         int lastLogIndex = raftLogTable.getLastLogIndex();
-        int lastLogTerm = raftLogTable.getLastLogTerm();
-        for (int i = 0; i < NODE_NUM; i++) {
-            if (i + 1 == mote.getMoteId()) {
+        for (int id = 1; id <= NODE_NUM; id++) {
+            if (id == mote.getMoteId()) {
                 // 不会发送给自己
                 continue;
             }
-            HeartbeatsRPC rpc = new HeartbeatsRPC(RPC.RPC_HEARTBEATS,
-                    constantVariable.currentTerm, mote.getMoteId(),
-                    0, 0, null);
-            raftSender.uniCast(i + 1, rpc);
+            leaderVariable.leaderSendHeartBeats(id);
         }
         mote.print(raftLogTable.toString());
     }
+
 
     /**
      * 处理数据包
@@ -209,7 +211,33 @@ public class BasicRaftRole extends RaftRole {
      * @param packet 数据包（心跳包回执）
      */
     private void receiveRPCHeartBeatsResp(TransmissionPacket packet) {
-
+        String data = packet.getData();
+        HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(data);
+        int followerId = respRPC.getSenderId();
+        if (respRPC.getIsMatched() == 1) {
+            /*
+            如果isMatched == 1，
+            代表Leader与该Follower之间，已经达成了一致，
+            此处涉及到对该Follower的相关更新，就必须得根据 Follower回传的matchIndex
+             */
+            leaderVariable.matchIndexes[followerId] = respRPC.getMatchIndex();
+            leaderVariable.nextIndexes[followerId] = respRPC.getMatchIndex() + 1;
+        } else {
+            /*
+            如果isMatched == 0，
+            代表Leader与该Follower之间，仍未达成一致
+            此处，我们需要不断降低对该Follower的nextIndex
+             */
+            if (leaderVariable.nextIndexes[followerId] == 1) {
+                //如果这个时候，它都仍出现了未达成一致
+                new RaftRuntimeException("the nextIndex of " + followerId + " can't be smaller than 1").printStackTrace();
+                return;
+            }
+            leaderVariable.nextIndexes[followerId]--;
+            leaderVariable.matchIndexes[followerId] = 0;
+            // 此时会立即补发一次请求，以尽快地同步
+            leaderVariable.leaderSendHeartBeats(followerId);
+        }
     }
 
     /**
@@ -219,11 +247,51 @@ public class BasicRaftRole extends RaftRole {
      */
     private void receiveRPCHeartBeats(TransmissionPacket packet) {
         String data = packet.getData();
-        HeartbeatsRPC rpc = new HeartbeatsRPC(data);
+        HeartBeatsRPC beatsRPC = new HeartBeatsRPC(data);
+        mote.print(raftLogTable.toString());
         //刷新一下动作时长，防止触发选举
         constantVariable.refreshElectionActionTime();
-        mote.print("DEBUG RECEIVE HEARTBEATS......");
-        mote.print(raftLogTable.toString());
+        if (beatsRPC.getPrevIndex() > raftLogTable.getLastLogIndex()) {
+            /*
+            如果传递过来的 prevIndex > lastLogIndex ：
+            就说明Leader记录自己的nextIndex发生了不一致 应当回复 false
+             */
+            HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
+                    constantVariable.currentTerm, 0, 0, mote.getMoteId());
+            raftSender.uniCast(beatsRPC.getSenderId(), respRPC);
+        } else {
+            /*
+            prevIndex <= lastLogIndex :
+            说明自身记录着的一些日志可能是不匹配的，
+            需要移除掉一部分日志：
+                每个Leader它对每个用户的发送的 prevIndex 都是来自于 nextIndex 的
+                而每个nextIndex最初都是和 Leader 的 lastLogIndex 靠齐的
+                所以如果prevIndex 变小了， 肯定是之前的没有匹配导致的结果，
+             */
+            //第一步，我们需要核实 prevIndex 这条日志，及其 term，是否与我们自身存储的对应日志相同
+            RaftLogItem prevLogItem = raftLogTable.getLogByIndex(beatsRPC.getPrevIndex());
+            if (prevLogItem.getTerm() != beatsRPC.getPrevTerm()) {
+                // 如果二者term不同，说明我们与Leader的该条日志仍不匹配
+                // 我们需要删除我们的这条日志
+                raftLogTable.deleteAt(beatsRPC.getPrevIndex());
+                // 仍需要给予false的回复
+                HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
+                        constantVariable.currentTerm, 0, 0, mote.getMoteId());
+                raftSender.uniCast(beatsRPC.getSenderId(), respRPC);
+            } else {
+                // 说明我们与Leader的日志已经匹配
+                RaftLogItem logItem = beatsRPC.getLogItem();
+                if (logItem != null) {
+                    // 这时，我们会检查是否有新的日志需要添加
+                    raftLogTable.addLog(logItem);
+                }
+                // 给予回复
+                HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
+                        constantVariable.currentTerm, 1, raftLogTable.getLastLogIndex(), mote.getMoteId());
+                raftSender.uniCast(beatsRPC.getSenderId(), respRPC);
+            }
+        }
+
     }
 
     /**
@@ -306,8 +374,21 @@ public class BasicRaftRole extends RaftRole {
     /**
      * Leader 会使用到的变量
      * nextIndexes、matchIndexes、voteGranted
+     * <p>
+     * 需要对数组与对象的<strong>下标关系</strong>进行重点说明：
+     * <pre>
+     *     int moteId = 4;
+     *     mote_4's info = nextIndexes[moteId]
+     * </pre>
+     * 因为 nextIndexes、matchIndexes、voteGranted 的实际数组大小均为 n + 1
+     * <p>
+     * 所以我们这边的下标，就设计成了 <strong>Id == index</strong>
      */
     class LeaderVariable {
+        /**
+         * Raft节点个数
+         */
+        int n;
         /**
          * 下一个下标
          */
@@ -325,11 +406,24 @@ public class BasicRaftRole extends RaftRole {
          * @param n Raft节点个数
          */
         public LeaderVariable(int n) {
+            this.n = n;
             nextIndexes = new int[n + 1];
             matchIndexes = new int[n + 1];
             voteGranted = new int[n + 1];
+            clear();
         }
 
+        /**
+         * 清空对象内变量
+         */
+        private void clear() {
+            int lastLogIndex = raftLogTable.getLastLogIndex();
+            for (int i = 1; i <= n; i++) {
+                nextIndexes[i] = lastLogIndex + 1;
+                matchIndexes[i] = 0;
+                voteGranted[i] = 0;
+            }
+        }
 
         /**
          * 成为 Leader
@@ -339,6 +433,7 @@ public class BasicRaftRole extends RaftRole {
             //成为领导，对参选时的变量进行清空
             candidateVariable.clearVoteAndActionTime();
             constantVariable.clearVotedAndLeader();
+            leaderVariable.clear();
             mote.print("I become the leader");
         }
 
@@ -349,6 +444,51 @@ public class BasicRaftRole extends RaftRole {
          */
         public boolean shouldBeatsCheck() {
             return role == ROLE_LEADER;
+        }
+
+        /**
+         * 领导发送心跳包给某个节点
+         *
+         * @param moteId 节点Id
+         */
+        private void leaderSendHeartBeats(int moteId) {
+            int lastLogIndex = raftLogTable.getLastLogIndex();
+            int nextIndex = nextIndexes[moteId];
+            // 计算 prevIndex 与 prevTerm 这些参数
+            int prevIndex = nextIndex - 1;
+            RaftLogItem transferLogItem = raftLogTable.getLogByIndex(prevIndex);
+            int prevTerm = transferLogItem.getTerm();
+            // 只有自身lastLogIndex发生了更新 才会尝试传输日志对象
+            if (nextIndex <= lastLogIndex) {
+                // 尝试传输该条日志对象(raftLog[nextIndex])之前，
+                // 我们必须确保nextIndex之前的日志是与我们匹配的
+                if (matchIndexes[moteId] != nextIndex - 1) {
+                    /*
+                     当不匹配时 我们需要去确认该 matchIndex 是否满足
+                     此时不传输日志对象
+                     等待函数receiveRPCHeartBeats的返回值
+                     我们在函数receiveRPCHeartBeatsResp中，对返回值进行处理，
+                     进而影响 nextIndexes 和 matchIndexes 与
+                     */
+                    HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
+                            constantVariable.currentTerm, mote.getMoteId(),
+                            prevIndex, prevTerm, null);
+                    raftSender.uniCast(moteId, rpc);
+                } else {
+                    // 发生匹配时 我们只需要去传输该条 raftLog[nextIndex] 日志对象即可
+                    RaftLogItem item = raftLogTable.getLogByIndex(nextIndex);
+                    HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
+                            constantVariable.currentTerm, mote.getMoteId(),
+                            prevIndex, prevTerm, item);
+                    raftSender.uniCast(moteId, rpc);
+                }
+            } else {
+                // 说明目标与我们的日志已经同步了，无需再传输新的数据
+                HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
+                        constantVariable.currentTerm, mote.getMoteId(),
+                        prevIndex, prevTerm, null);
+                raftSender.uniCast(moteId, rpc);
+            }
         }
     }
 
@@ -393,11 +533,11 @@ public class BasicRaftRole extends RaftRole {
                     mote.print("选票不够，选举失败");
                     break;
                 case ROLE_LEADER:
-                    mote.print("选举成功");
+                    mote.print("已经选举成功");
                     break;
                 case ROLE_FOLLOWER:
                     this.clearVoteAndActionTime();
-                    mote.print("因为其他人，选举失败");
+                    mote.print("因为其他Candidate或者Leader，选举失败");
                     break;
                 default:
             }
@@ -517,7 +657,7 @@ public class BasicRaftRole extends RaftRole {
                 //如果是一个选举请求 自身会把votedFor进行设置
                 int senderId = rpc.getSenderId();
                 constantVariable.votedFor = senderId;
-            } else if (rpc instanceof HeartbeatsRPC) {
+            } else if (rpc instanceof HeartBeatsRPC) {
                 int senderId = rpc.getSenderId();
                 constantVariable.currentLeaderId = senderId;
             } else {

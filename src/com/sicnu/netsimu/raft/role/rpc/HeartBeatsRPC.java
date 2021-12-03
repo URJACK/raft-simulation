@@ -11,7 +11,7 @@ import lombok.Data;
  * 后5个参数为： logItem 的属性
  */
 @Data
-public class HeartbeatsRPC implements RPCConvert, RequestRPC {
+public class HeartBeatsRPC implements RPCConvert, RequestRPC {
     /**
      * RPC 类型字段
      */
@@ -38,19 +38,26 @@ public class HeartbeatsRPC implements RPCConvert, RequestRPC {
     /**
      * @param compressedData 实际传输过程中使用的压缩字符串
      */
-    public HeartbeatsRPC(String compressedData) {
+    public HeartBeatsRPC(String compressedData) {
         parse(compressedData);
     }
 
     /**
+     * 该构造函数中，最后一个参数 LogItem 是可以为空的
+     * <p>
+     * 如果为空，我们就按照5个参数的标准进行 压缩 与 解析。
+     * <p>
+     * 反之不为空，我们就按照10个参数（LogItem自身有5个参数）的标准进行 压缩 与 解析
+     *
      * @param type      RPC类型字段
      * @param term      Leader节点自身的任期号
      * @param leaderId  Leader节点自身的Id号
      * @param prevIndex 最新日志的index
      * @param prevTerm  最新日志的term
      * @param logItem   心跳包可以传入logItem
+     * @see RaftLogItem
      */
-    public HeartbeatsRPC(int type, int term, int leaderId, int prevIndex, int prevTerm, @AllowNull RaftLogItem logItem) {
+    public HeartBeatsRPC(int type, int term, int leaderId, int prevIndex, int prevTerm, @AllowNull RaftLogItem logItem) {
         this.type = type;
         this.term = term;
         this.leaderId = leaderId;

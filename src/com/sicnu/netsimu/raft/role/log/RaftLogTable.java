@@ -20,6 +20,10 @@ public class RaftLogTable {
      * 日志个数
      */
     int n;
+    /**
+     * 日志确认编号
+     */
+    int commitIndex;
 
     public RaftLogTable() {
         this.items = new ArrayList<>();
@@ -52,14 +56,14 @@ public class RaftLogTable {
      * <p>
      * RaftLogItem item = raftLogTable.getLogByIndex(0);
      *
-     * @param index 下标 --> [1, n] 为闭区间
+     * @param index 下标 --> [0, n] 为闭区间
      * @return 日志对象
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @see RaftLogItem
      */
     public RaftLogItem getLogByIndex(int index) throws IndexOutOfBoundsException {
-        if (index > n || index < 1) {
-            throw new IndexOutOfBoundsException("index 不符合要求 需要在 [1,n] 闭区间之间");
+        if (index > n || index < 0) {
+            throw new IndexOutOfBoundsException("index " + index + " 不符合要求 需要在 [1,n] 闭区间之间");
         }
         return items.get(index);
     }
@@ -84,6 +88,24 @@ public class RaftLogTable {
     }
 
     /**
+     * 添加一条日志，触发方式如下：
+     * <pre>
+     *     RaftLogTable table = ...;
+     *     RaftLogItem log = ...;
+     *     table.addLog(log)
+     * </pre>
+     * 会受到<strong>addLog(String operation, String key, String value, int term)</strong>的调用。
+     * <p>
+     * 同时也可以被外部调用的。
+     *
+     * @param logItem 被添加的日志对象
+     */
+    public void addLog(RaftLogItem logItem) {
+        this.n++;
+        this.items.add(logItem);
+    }
+
+    /**
      * 清空日志表
      * 调用方式如下：
      * <pre>
@@ -96,6 +118,7 @@ public class RaftLogTable {
      */
     public void clear() {
         this.n = 0;
+        this.commitIndex = 0;
         this.items.clear();
         //添加一条占位用的空数据 让整个节点的访问空间锁定在 [1, n] 闭区间
         this.items.add(new RaftLogItem(0, 0, "", "", ""));
@@ -111,5 +134,31 @@ public class RaftLogTable {
                 sb.toString() +
                 ", n=" + n +
                 '}';
+    }
+
+    /**
+     * 删除对应index的Log日志
+     * <pre>
+     *     RaftLogTable table = ...
+     *     table.deleteAt(4)
+     * </pre>
+     * 一般是通过BasicRaftRole进行调用
+     * <p>
+     * 需要注意，delete的下标 -> [1,n]
+     * <p>
+     * 但是getLogByIndex的下标 -> [0,n]
+     * 因为0号日志是占位日志。
+     *
+     * @param deleteIndex 删除的日志下标
+     * @see com.sicnu.netsimu.raft.role.RaftRole
+     */
+    public void deleteAt(int deleteIndex) {
+        if (deleteIndex > 0 && deleteIndex <= n) {
+            RaftLogItem remove = this.items.remove(deleteIndex);
+            this.n--;
+        } else {
+            throw new IndexOutOfBoundsException("当前删除的index: " + deleteIndex +
+                    " RaftLogTable.deleteAt 的 访问下标需要控制在 1 ~ n 之间");
+        }
     }
 }
