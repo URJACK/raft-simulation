@@ -5,6 +5,7 @@ import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
 import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.statis.EnergyCost;
+import com.sicnu.netsimu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.raft.role.BasicRaftRole;
 import com.sicnu.netsimu.raft.role.RaftRole;
 import com.sicnu.netsimu.raft.RaftUtils;
@@ -86,4 +87,20 @@ public class RaftMote extends Mote {
         raftRole.handlePacket(packet);
     }
 
+    /**
+     * Raft算法的日志的相关操作，被RaftOpCommand触发，
+     * 调用自身raftRole的引用的同名函数logOperate进行工作。
+     * <p>
+     * 命令通过 Command -> Mote -> Role 的传递链传递动作
+     *
+     * @param operationType 操作类型
+     * @param key           操作键
+     * @param value         操作值
+     * @see RaftOpCommand
+     * @see RaftMote
+     * @see RaftRole
+     */
+    public void logOperate(String operationType, String key, String value) {
+        raftRole.logOperate(operationType, key, value);
+    }
 }

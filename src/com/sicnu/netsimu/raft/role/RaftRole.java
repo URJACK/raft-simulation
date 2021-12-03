@@ -2,6 +2,7 @@ package com.sicnu.netsimu.raft.role;
 
 import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
 import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.raft.mote.RaftMote;
 
 /**
@@ -67,4 +68,22 @@ public abstract class RaftRole {
      * @param packet 数据包
      */
     public abstract void handlePacket(TransmissionPacket packet);
+
+    /**
+     * <p>
+     * Raft日志操作函数
+     * 该函数应当通过外部进行触发，故在本仿真程序中，
+     * 通过<strong>RaftOpCommand</strong>进行触发。
+     * <p>
+     * RaftOpCommand触发逻辑中，必须要求该Mote必修是一个RaftMote。
+     * 触发的是RaftMote的logOperate函数，进而触发了RaftRole的logOperate
+     *
+     * @param operationType 日志操作类型
+     * @param key           操作键
+     * @param value         操作值
+     * @see RaftOpCommand
+     * @see RaftMote
+     * @see RaftRole
+     */
+    public abstract void logOperate(String operationType, String key, String value);
 }

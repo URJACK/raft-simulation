@@ -9,7 +9,6 @@ import java.util.HashSet;
 public class RaftCommandTranslator extends CommandTranslator {
     protected HashSet<String> extendsCommandTypeHashset;
     protected HashMap<String, Integer> extendsCommandLengthHashMap;
-    protected HashMap<String, RaftOpCommand.Operation> raftOperation;
 
     /**
      * 与 extendParse 搭配使用
@@ -26,7 +25,6 @@ public class RaftCommandTranslator extends CommandTranslator {
     protected void extendInit() {
         extendsCommandTypeHashset = new HashSet<>();
         extendsCommandLengthHashMap = new HashMap<>();
-        raftOperation = new HashMap<>();
         //指令集合
         extendsCommandTypeHashset.add("RAFT_ELECT");
         extendsCommandTypeHashset.add("RAFT_BEATS");
@@ -35,10 +33,6 @@ public class RaftCommandTranslator extends CommandTranslator {
         extendsCommandLengthHashMap.put("RAFT_ELECT", 3);
         extendsCommandLengthHashMap.put("RAFT_BEATS", 3);
         extendsCommandLengthHashMap.put("RAFT_OP", 6);
-        //操作类型集合
-        raftOperation.put("add", RaftOpCommand.Operation.ADD);
-        raftOperation.put("del", RaftOpCommand.Operation.DEL);
-        raftOperation.put("modify", RaftOpCommand.Operation.MODIFY);
     }
 
     /**
@@ -72,7 +66,7 @@ public class RaftCommandTranslator extends CommandTranslator {
                 case "RAFT_OP" ->
                         // 生成控制台展示接口
                         new RaftOpCommand(simulator, timeStamp, commandType, Integer.parseInt(commandStrings[2]),
-                                raftOperation.get(commandStrings[3]), commandStrings[4], commandStrings[5]);
+                                commandStrings[3], commandStrings[4], commandStrings[5]);
                 default -> throw new CommandParseException("No Matched Type");
             };
         }

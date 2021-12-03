@@ -4,6 +4,7 @@ import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
 import com.sicnu.netsimu.raft.RaftUtils;
 import com.sicnu.netsimu.raft.annotation.NotNull;
+import com.sicnu.netsimu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.raft.exception.ParameterException;
 import com.sicnu.netsimu.raft.mote.RaftMote;
 import com.sicnu.netsimu.raft.role.log.RaftLogTable;
@@ -139,6 +140,7 @@ public class BasicRaftRole extends RaftRole {
                     0, 0, null);
             raftSender.uniCast(i + 1, rpc);
         }
+        mote.print(raftLogTable.toString());
     }
 
     /**
@@ -170,12 +172,41 @@ public class BasicRaftRole extends RaftRole {
         }
     }
 
+    /**
+     * <p>
+     * Raft日志操作函数
+     * 该函数应当通过外部进行触发，故在本仿真程序中，
+     * 通过<strong>RaftOpCommand</strong>进行触发。
+     * 命令通过 Command -> Mote -> Role 传递动作
+     * <p>
+     * RaftOpCommand触发逻辑中，必须要求该Mote必修是一个RaftMote。
+     * 触发的是RaftMote的logOperate函数，进而触发了RaftRole的logOperate
+     *
+     * @param operationType 日志操作类型
+     * @param key           操作键
+     * @param value         操作值
+     * @see RaftOpCommand
+     * @see RaftMote
+     * @see RaftRole
+     */
+    @Override
+    public void logOperate(String operationType, String key, String value) {
+        //检查自己是否是Leader
+        if (role != ROLE_LEADER) {
+            //如果不是Leader，没有权力进行日志操作
+            return;
+        }
+        //调用 RaftLogTable 对该条日志进行录入
+        raftLogTable.addLog(operationType, key, value, constantVariable.currentTerm);
+    }
+
+
     // 4个不同数据包的处理转发函数 //
 
     /**
      * 接受到心跳包的回复
      *
-     * @param packet 数据包（心跳包）
+     * @param packet 数据包（心跳包回执）
      */
     private void receiveRPCHeartBeatsResp(TransmissionPacket packet) {
 
@@ -184,7 +215,7 @@ public class BasicRaftRole extends RaftRole {
     /**
      * 接受到心跳包 响应数据包
      *
-     * @param packet
+     * @param packet 数据包（心跳包）
      */
     private void receiveRPCHeartBeats(TransmissionPacket packet) {
         String data = packet.getData();
@@ -192,12 +223,13 @@ public class BasicRaftRole extends RaftRole {
         //刷新一下动作时长，防止触发选举
         constantVariable.refreshElectionActionTime();
         mote.print("DEBUG RECEIVE HEARTBEATS......");
+        mote.print(raftLogTable.toString());
     }
 
     /**
      * 接受到了选举数据包的 响应数据包
      *
-     * @param packet
+     * @param packet 数据包（选举包回执）
      */
     private void receiveRPCElectResp(TransmissionPacket packet) {
         String data = packet.getData();
@@ -216,7 +248,7 @@ public class BasicRaftRole extends RaftRole {
      * 接收到一个选举数据包
      * 会触发动作计时刷新
      *
-     * @param packet 数据包
+     * @param packet 数据包（选举包）
      */
     private void receiveRPCElect(TransmissionPacket packet) {
         String data = packet.getData();
@@ -247,7 +279,7 @@ public class BasicRaftRole extends RaftRole {
      * 检查该选举RPC是否满足要求
      *
      * @param rpc 选举RPC
-     * @return 7
+     * @return true ： 该 Candidate可以从我这里获取选票
      */
     private boolean electRPCValidateChecking(ElectionRPC rpc) {
         if (rpc.getTerm() <= constantVariable.currentTerm) {
@@ -512,6 +544,11 @@ public class BasicRaftRole extends RaftRole {
         /**
          * 每个节点成为Follower的时候，不一定有Leader
          * 因为节点会因为其他节点的RPC-ELECT，而变为Follower
+         * <p>
+         * 只要节点接受到一次心跳包后，那么它会去更改自己的currentLeaderId
+         * 此时就可以说明自己已经有Leader了。
+         * <p>
+         * 这个方法具体在哪里可能会被调用，目前我也不太清楚
          *
          * @return true == 代表自己有Leader
          */

@@ -2,29 +2,31 @@ package com.sicnu.netsimu.raft.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.command.Command;
+import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.raft.mote.RaftMote;
+import com.sicnu.netsimu.raft.role.RaftRole;
 import lombok.Data;
 
 /**
  * Raft 数据操作命令
+ * <p>
+ * 用来触发各种Raft算法的日志的相关操作
+ * 命令通过 Command -> Mote -> Role 的传递链传递动作
+ * <p>
+ * <pre>
+ * 1200, RAFT_OP, 1, add, name, hello
+ * </pre>
+ *
+ * @see RaftOpCommand
+ * @see RaftMote
+ * @see RaftRole
  */
 @Data
 public class RaftOpCommand extends Command {
     int nodeId;
-    Operation operation;
+    String operation;
     String key;
     String value;
-
-    @Override
-    public void work() {
-
-    }
-
-    /**
-     * Raft的三个相关操作
-     */
-    public enum Operation {
-        ADD, DEL, MODIFY
-    }
 
     /**
      * @param simulator 模拟器引用对象
@@ -35,8 +37,7 @@ public class RaftOpCommand extends Command {
      * @param key       操作键
      * @param value     操作值
      */
-    public RaftOpCommand(NetSimulator simulator, long timeStamp, String type, int nodeId,
-                         Operation operation, String key, String value) {
+    public RaftOpCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, String operation, String key, String value) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
         this.operation = operation;
@@ -44,5 +45,9 @@ public class RaftOpCommand extends Command {
         this.value = value;
     }
 
-
+    @Override
+    public void work() {
+        RaftMote mote = (RaftMote) simulator.getMoteManager().getMote(nodeId);
+        mote.logOperate(operation, key, value);
+    }
 }

@@ -1,5 +1,7 @@
 package com.sicnu.netsimu.raft.role.log;
 
+import com.sicnu.netsimu.raft.command.RaftOpCommand;
+
 import java.util.ArrayList;
 
 /**
@@ -21,9 +23,7 @@ public class RaftLogTable {
 
     public RaftLogTable() {
         this.items = new ArrayList<>();
-        //添加一条占位用的空数据 让整个节点的访问空间锁定在 [1, n] 闭区间
-        this.items.add(new RaftLogItem(0, 0, "", "", ""));
-        this.n = 0;
+        clear();
     }
 
     /**
@@ -62,5 +62,54 @@ public class RaftLogTable {
             throw new IndexOutOfBoundsException("index 不符合要求 需要在 [1,n] 闭区间之间");
         }
         return items.get(index);
+    }
+
+    /**
+     * 添加一条日志，
+     * 触发方式如下：
+     * <pre>
+     * RaftLogTable table = ...;
+     * table.addLog(operationType, key, value);
+     * </pre>
+     *
+     * @param operation 操作类型
+     * @param key       操作键
+     * @param value     操作值
+     * @see com.sicnu.netsimu.raft.mote.RaftMote
+     */
+    public void addLog(String operation, String key, String value, int term) {
+        this.n++;
+        RaftLogItem item = new RaftLogItem(this.n, term, operation, key, value);
+        this.items.add(item);
+    }
+
+    /**
+     * 清空日志表
+     * 调用方式如下：
+     * <pre>
+     *     RaftLogTable table = ...;
+     *     table.clear()
+     * </pre>
+     * 可能会被RaftRole进行调用
+     *
+     * @see com.sicnu.netsimu.raft.role.RaftRole
+     */
+    public void clear() {
+        this.n = 0;
+        this.items.clear();
+        //添加一条占位用的空数据 让整个节点的访问空间锁定在 [1, n] 闭区间
+        this.items.add(new RaftLogItem(0, 0, "", "", ""));
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= n; i++) {
+            sb.append(items.get(i).toString());
+        }
+        return "RaftLogTable{" +
+                sb.toString() +
+                ", n=" + n +
+                '}';
     }
 }

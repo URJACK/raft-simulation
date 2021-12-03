@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
  * 不允许值为空
  */
 @Target({ElementType.METHOD, ElementType.PARAMETER})
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.SOURCE)
 public @interface NotNull {
 }
