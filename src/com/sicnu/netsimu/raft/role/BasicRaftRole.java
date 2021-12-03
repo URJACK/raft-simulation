@@ -303,12 +303,45 @@ public class BasicRaftRole extends RaftRole {
         String data = packet.getData();
         ElectionRespRPC rpc = new ElectionRespRPC(data);
         if (rpc.getVoteGranted() == 1) {
-            //查看是否获得选票
+            /*
+            如果获得了选票，我们会增加选票的计数器
+            同时对计数器的结果进行核查，检查自身的票数是否过半，过半直接成为Leader
+             */
             candidateVariable.gotVoteNum++;
-        }
-        if (candidateVariable.hasGotEnoughVoteToBeLeader()) {
-            //选票过半，成为Leader
-            leaderVariable.TO_LEADER();
+            if (candidateVariable.hasGotEnoughVoteToBeLeader()) {
+                //选票过半，成为Leader
+                leaderVariable.TO_LEADER();
+            }
+        } else {
+            /*
+            如果没有获得选票：
+            (1)· Follower 已经投给了其他人
+            (2)· 自身的日志没有满足匹配要求
+            (3)· 自身的term没有超过follower
+
+            特别是(3)是一个涉及到自身角色发生变化的状况
+            前两种，都不会影响到Leader的决策
+            我们着重针对 term 字段，来排查是否是情况(3)
+             */
+            if (rpc.getTerm() > constantVariable.currentTerm) {
+                /*
+                需要注意的是，即便 candidate's term == 7 , follower's term == 6.
+                在该 follower 给 candidate 的响应中， RESP_RPC's term == 7
+
+                正好，比如A 和 B 都是 Candidate，term 都是 7
+                C 先受到 A 的请求，C 给了 A 选票，并且告知了自己的term = 7。
+                C 后受到 B 的请求，C 拒绝了 B ，没有给出选票，并且告知了自己的term = 7
+
+                关键重点是B（A没有特别需要注意的）。B自身的term 刚好等于了 C的term，
+                B显然不能因为C的term（A的term传递过来的）与自己相等，自己就变为Follower
+                故只有当RESP_RPC's term 大于 currentTerm 的时候，才会变为Follower
+                 */
+                try {
+                    constantVariable.TO_FOLLOWER(rpc.getTerm(), rpc);
+                } catch (ParameterException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -338,6 +371,11 @@ public class BasicRaftRole extends RaftRole {
             } catch (ParameterException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
+        } else {
+            //针对该选票进行拒绝
+            ElectionRespRPC respRPC = new ElectionRespRPC(RPC.RPC_ELECT_RESP,
+                    constantVariable.currentTerm, 0, mote.getMoteId());
+            raftSender.uniCast(rpc.getSenderId(), respRPC);
         }
     }
 
@@ -641,7 +679,7 @@ public class BasicRaftRole extends RaftRole {
          * @throws ParameterException     RPC不能传入空
          * @throws ClassNotFoundException RPC没有找到对应的实现类
          */
-        public void TO_FOLLOWER(int term, @NotNull RequestRPC rpc) throws ParameterException, ClassNotFoundException {
+        public void TO_FOLLOWER(int term, @NotNull SenderRPC rpc) throws ParameterException, ClassNotFoundException {
             if (rpc == null) {
                 throw new ParameterException("ElectionRPC 不能为空");
             }

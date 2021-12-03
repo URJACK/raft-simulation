@@ -11,7 +11,7 @@ import lombok.Data;
  * 后5个参数为： logItem 的属性
  */
 @Data
-public class HeartBeatsRPC implements RPCConvert, RequestRPC {
+public class HeartBeatsRPC implements RPCConvert, SenderRPC {
     /**
      * RPC 类型字段
      */

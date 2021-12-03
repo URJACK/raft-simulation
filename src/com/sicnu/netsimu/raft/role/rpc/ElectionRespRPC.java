@@ -6,7 +6,7 @@ import lombok.Data;
  * 节点选举响应的RPC
  */
 @Data
-public class ElectionRespRPC implements RPCConvert {
+public class ElectionRespRPC implements RPCConvert, SenderRPC {
     /**
      * RPC 类型字段
      */

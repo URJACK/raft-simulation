@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class HeartBeatsRespRPC implements RPCConvert {
+public class HeartBeatsRespRPC implements RPCConvert, SenderRPC {
     /**
      * RPC 类型字段
      */
