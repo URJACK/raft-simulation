@@ -199,7 +199,7 @@ public class BasicRaftRole extends RaftRole {
             return;
         }
         //调用 RaftLogTable 对该条日志进行录入
-        raftLogTable.addLog(operationType, key, value, constantVariable.currentTerm);
+        raftLogTable.addLogInLast(operationType, key, value, constantVariable.currentTerm);
     }
 
 
@@ -248,6 +248,7 @@ public class BasicRaftRole extends RaftRole {
     private void receiveRPCHeartBeats(TransmissionPacket packet) {
         String data = packet.getData();
         HeartBeatsRPC beatsRPC = new HeartBeatsRPC(data);
+//        mote.print("beats : " + beatsRPC.toString());
         mote.print(raftLogTable.toString());
         //刷新一下动作时长，防止触发选举
         constantVariable.refreshElectionActionTime();
@@ -271,19 +272,33 @@ public class BasicRaftRole extends RaftRole {
             //第一步，我们需要核实 prevIndex 这条日志，及其 term，是否与我们自身存储的对应日志相同
             RaftLogItem prevLogItem = raftLogTable.getLogByIndex(beatsRPC.getPrevIndex());
             if (prevLogItem.getTerm() != beatsRPC.getPrevTerm()) {
-                // 如果二者term不同，说明我们与Leader的该条日志仍不匹配
-                // 我们需要删除我们的这条日志
+                /*
+                针对传入的 prevIndex ，本机对应的日志的prevTerm != RPC中的prevTerm
+                说明我们与Leader的该条日志仍不匹配
+                我们需要删除我们的这条日志
+                 */
                 raftLogTable.deleteAt(beatsRPC.getPrevIndex());
                 // 仍需要给予false的回复
                 HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
                         constantVariable.currentTerm, 0, 0, mote.getMoteId());
                 raftSender.uniCast(beatsRPC.getSenderId(), respRPC);
             } else {
-                // 说明我们与Leader的日志已经匹配
+                /*
+                反之，如果对于传入的 prevIndex ，本机对应的日志的prevTerm == RPC中的prevTerm
+                说明我们与Leader的该条日志已经匹配了
+                 */
                 RaftLogItem logItem = beatsRPC.getLogItem();
                 if (logItem != null) {
-                    // 这时，我们会检查是否有新的日志需要添加
-                    raftLogTable.addLog(logItem);
+                    /*
+                    这里添加日志的时候，一定要指明添加的index！！
+                    不然，假设第二个相同的心跳包，也应该会触发该逻辑，
+                    如果直接调用 raftLogTable.addLog(logItem) ，
+                    它会将这个相同的心跳包的日志内容，直接再加到日志表的末尾去
+                     */
+                    raftLogTable.addLog(logItem, beatsRPC.getPrevIndex() + 1);
+                    mote.print("DEBUG logItem != null prevLogItem.getTerm()=" + prevLogItem.getTerm() +
+                            " beatsRPC.getPrevTerm()=" + beatsRPC.getPrevTerm() + " " +
+                            " logItem=" + logItem);
                 }
                 // 给予回复
                 HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,

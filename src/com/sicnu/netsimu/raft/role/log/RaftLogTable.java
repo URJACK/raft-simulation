@@ -1,6 +1,6 @@
 package com.sicnu.netsimu.raft.role.log;
 
-import com.sicnu.netsimu.raft.command.RaftOpCommand;
+import com.sicnu.netsimu.raft.exception.ParseException;
 
 import java.util.ArrayList;
 
@@ -34,9 +34,6 @@ public class RaftLogTable {
      * @return 最后一个item的index
      */
     public int getLastLogIndex() {
-        if (n == 0) {
-            return 0;
-        }
         return items.get(n).index;
     }
 
@@ -44,9 +41,6 @@ public class RaftLogTable {
      * @return 最后一个item的term
      */
     public int getLastLogTerm() {
-        if (n == 0) {
-            return 0;
-        }
         return items.get(n).term;
     }
 
@@ -69,22 +63,23 @@ public class RaftLogTable {
     }
 
     /**
-     * 添加一条日志，
+     * 末尾添加一条日志（不带index），
      * 触发方式如下：
      * <pre>
      * RaftLogTable table = ...;
      * table.addLog(operationType, key, value);
      * </pre>
+     * 本身是作为一个调用者，实际添加的方法，写在 addLog( RaftLogItem, int ) 中
      *
      * @param operation 操作类型
      * @param key       操作键
      * @param value     操作值
      * @see com.sicnu.netsimu.raft.mote.RaftMote
      */
-    public void addLog(String operation, String key, String value, int term) {
-        this.n++;
-        RaftLogItem item = new RaftLogItem(this.n, term, operation, key, value);
-        this.items.add(item);
+    public void addLogInLast(String operation, String key, String value, int term) {
+        // 新增日志条目的index 肯定比当前的n 要多1一个
+        RaftLogItem item = new RaftLogItem(this.n + 1, term, operation, key, value);
+        this.addLog(item, this.n + 1);
     }
 
     /**
@@ -97,12 +92,52 @@ public class RaftLogTable {
      * 会受到<strong>addLog(String operation, String key, String value, int term)</strong>的调用。
      * <p>
      * 同时也可以被外部调用的。
+     * 该方法会对ArrayList的多余对象进行清空
+     * 进而自动维护n这个变量
      *
      * @param logItem 被添加的日志对象
+     * @param index   添加对象的index
+     * @throws IndexOutOfBoundsException index可以属于[1,n + 1] 之间的所有值
      */
-    public void addLog(RaftLogItem logItem) {
-        this.n++;
-        this.items.add(logItem);
+    public void addLog(RaftLogItem logItem, int index) {
+        if (index < 1) {
+            throw new IndexOutOfBoundsException("index 的范围必须不可以为 0");
+        }
+        if (index <= n) {
+            /*
+            如果加的日志在这个范围内，我们需要清理掉原本的 [index, n] 之间的日志
+            在完成清理后，items.length() 应该等于该 index
+            eg:
+                n = 5 : 因为有空日志的存在，意味着 items.size() == 6
+                index = 3 : 我们删除掉 [3,5] 留下了 [0, 2] --> size == index = 3
+             */
+            if (items.size() != n + 1) {
+                new ParseException("RaftLog's n 与 它持有的items.length() 不匹配").printStackTrace();
+                return;
+            }
+            // 清空掉index后面的元素
+            while (items.size() > index) {
+                items.remove(items.size() - 1);
+            }
+            // 清理元素后，往item增加该元素
+            this.n = index;
+            items.add(logItem);
+        } else {
+            /*
+            如果加的日志不属于本来的范围内，
+            我们对index也有要求：index = n + 1
+            因为我们显然不能允许日志表中出现空日志
+             */
+            if (index != n + 1) {
+                // 此时意味着 index 已经比 n + 1 还要大，插入会有空日志
+                throw new IndexOutOfBoundsException("index is out of range of n + 1");
+            }
+            this.n++;
+            this.items.add(logItem);
+            if (logItem.getIndex() != this.n) {
+                new ParseException("lastLogIndex is not equals with the n").printStackTrace();
+            }
+        }
     }
 
     /**
