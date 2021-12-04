@@ -2,7 +2,13 @@ package com.sicnu.netsimu.core.utils;
 
 import java.util.Random;
 
-public class NetsimuRandom {
+/**
+ * 网络仿真 随机类
+ * <p>
+ * 在本次网络仿真的活动中，用户编写的所有随机数，都应该使用该随机类来产生。
+ * 这样可以确保整个的仿真结果，能够使用随机类进行确定。
+ */
+public class NetSimulationRandom {
 
     static Random random;
 

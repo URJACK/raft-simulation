@@ -4,7 +4,7 @@ import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
 import com.sicnu.netsimu.core.statis.Statistician;
-import com.sicnu.netsimu.core.utils.NetsimuRandom;
+import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 import com.sicnu.netsimu.ui.InfoOutputManager;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
@@ -204,7 +204,7 @@ public abstract class Mote {
             } else {
                 energyCost = annotation.value();
                 float beta = annotation.beta();
-                energyCost = (float) (energyCost * (1 - NetsimuRandom.nextFloat() * beta));
+                energyCost = (float) (energyCost * (1 - NetSimulationRandom.nextFloat() * beta));
             }
 //            System.out.println("DEBUG cost " + energyCost);
             //将能耗统计进入统计家中
