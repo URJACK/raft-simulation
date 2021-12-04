@@ -1,5 +1,6 @@
 package com.sicnu.netsimu.raft;
 
+import com.sicnu.netsimu.core.utils.NetsimuRandom;
 import com.sicnu.netsimu.raft.exception.ParameterException;
 
 /**
@@ -31,7 +32,7 @@ public class RaftUtils {
             new ParameterException("floatValue's beta can't be bigger than 1").printStackTrace();
             return 0;
         }
-        double offset = Math.random() * val * beta * 2;
+        double offset = NetsimuRandom.nextFloat() * val * beta * 2;
         return (long) (val * (1 - beta) + offset);
     }
 

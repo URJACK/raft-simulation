@@ -220,6 +220,7 @@ public class BasicRaftRole extends RaftRole {
             代表Leader与该Follower之间，已经达成了一致，
             此处涉及到对该Follower的相关更新，就必须得根据 Follower回传的matchIndex
              */
+            mote.print("......DEBUG MATCHED: " + respRPC);
             leaderVariable.matchIndexes[followerId] = respRPC.getMatchIndex();
             leaderVariable.nextIndexes[followerId] = respRPC.getMatchIndex() + 1;
         } else {
@@ -228,6 +229,7 @@ public class BasicRaftRole extends RaftRole {
             代表Leader与该Follower之间，仍未达成一致
             此处，我们需要不断降低对该Follower的nextIndex
              */
+            mote.print("......DEBUG NOT MATCHED: " + respRPC);
             if (leaderVariable.nextIndexes[followerId] == 1) {
                 //如果这个时候，它都仍出现了未达成一致
                 new RaftRuntimeException("the nextIndex of " + followerId + " can't be smaller than 1").printStackTrace();
@@ -505,43 +507,59 @@ public class BasicRaftRole extends RaftRole {
          * @param moteId 节点Id
          */
         private void leaderSendHeartBeats(int moteId) {
+            // 获取我们判定运算的三个核心参数
             int lastLogIndex = raftLogTable.getLastLogIndex();
             int nextIndex = nextIndexes[moteId];
+            int matchIndex = matchIndexes[moteId];
             // 计算 prevIndex 与 prevTerm 这些参数
             int prevIndex = nextIndex - 1;
             RaftLogItem transferLogItem = raftLogTable.getLogByIndex(prevIndex);
             int prevTerm = transferLogItem.getTerm();
-            // 只有自身lastLogIndex发生了更新 才会尝试传输日志对象
-            if (nextIndex <= lastLogIndex) {
-                // 尝试传输该条日志对象(raftLog[nextIndex])之前，
-                // 我们必须确保nextIndex之前的日志是与我们匹配的
-                if (matchIndexes[moteId] != nextIndex - 1) {
+            /*
+            尝试传输该条日志对象(raftLog[nextIndex])之前，
+            我们必须确保nextIndex之前的日志是与我们匹配的
+             */
+            if (matchIndex != nextIndex - 1) {
+                /*
+                当不匹配时 我们需要去确认该 matchIndex 是否满足
+                此时不传输日志对象
+                等待函数receiveRPCHeartBeats的返回值
+                我们在函数receiveRPCHeartBeatsResp中，对返回值进行处理，
+                进而影响 nextIndexes 和 matchIndexes 与
+                */
+                HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
+                        constantVariable.currentTerm, mote.getMoteId(),
+                        prevIndex, prevTerm, null);
+                raftSender.uniCast(moteId, rpc);
+            } else {
+                /*
+                如果我们对该Follower，满足以下关系：
+                matchIndex == nextIndex - 1
+                那么这说明我们已经确定了该Follower的日志进度，但并不是说和我们日志进度相同。
+                例如记录的该结点的 nextIndex = 5, matchIndex = 4,
+                而Leader自身的 lastLogIndex = 7
+                这说明 Leader 与 该Follower [1,4] 是一样的。
+                但是显然 Follower 仍不具有与 Leader 相同的日志，也就是[5,7] 这部分日志。
+                */
+                if (nextIndex <= lastLogIndex) {
                     /*
-                     当不匹配时 我们需要去确认该 matchIndex 是否满足
-                     此时不传输日志对象
-                     等待函数receiveRPCHeartBeats的返回值
-                     我们在函数receiveRPCHeartBeatsResp中，对返回值进行处理，
-                     进而影响 nextIndexes 和 matchIndexes 与
+                    匹配后，我们将对自身lastLogIndex进行判定
+                    进而得出是否需要发送LogItem
                      */
-                    HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
-                            constantVariable.currentTerm, mote.getMoteId(),
-                            prevIndex, prevTerm, null);
-                    raftSender.uniCast(moteId, rpc);
-                } else {
-                    // 发生匹配时 我们只需要去传输该条 raftLog[nextIndex] 日志对象即可
                     RaftLogItem item = raftLogTable.getLogByIndex(nextIndex);
                     HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
                             constantVariable.currentTerm, mote.getMoteId(),
                             prevIndex, prevTerm, item);
                     raftSender.uniCast(moteId, rpc);
+                } else {
+                    // 说明目标与我们的日志已经同步了，无需再传输新的数据
+                    HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
+                            constantVariable.currentTerm, mote.getMoteId(),
+                            prevIndex, prevTerm, null);
+                    raftSender.uniCast(moteId, rpc);
                 }
-            } else {
-                // 说明目标与我们的日志已经同步了，无需再传输新的数据
-                HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
-                        constantVariable.currentTerm, mote.getMoteId(),
-                        prevIndex, prevTerm, null);
-                raftSender.uniCast(moteId, rpc);
             }
+
         }
     }
 
