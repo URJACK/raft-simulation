@@ -2,15 +2,23 @@ package com.sicnu.netsimu.core.mote;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
-import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
+import com.sicnu.netsimu.core.net.BasicNetStack;
+import com.sicnu.netsimu.core.net.NetField;
+import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.statis.EnergyCost;
+import com.sicnu.netsimu.raft.RaftUtils;
+import com.sicnu.netsimu.raft.exception.ParseException;
 import lombok.Data;
+
+import java.util.ArrayList;
 
 /**
  * 基础节点
  */
-@Data
 public class NormalMote extends Mote {
+
+    public static final String MAC_PREFIX = "EE:EE:EE:EE:EE:";
+
     /**
      * @param simulator 模拟器对象引用
      * @param moteId    节点的id
@@ -19,6 +27,8 @@ public class NormalMote extends Mote {
      */
     public NormalMote(NetSimulator simulator, int moteId, float x, float y, String... args) {
         super(simulator, moteId, x, y, NormalMote.class);
+        String selfMacAddress = RaftUtils.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
+        equipNetStack(selfMacAddress);
     }
 
     @Override
@@ -28,7 +38,6 @@ public class NormalMote extends Mote {
             @Override
             public void work() {
                 call("print", "我是节点");
-//                print("我是节点");
             }
         };
         setTimeout(event);
@@ -36,16 +45,37 @@ public class NormalMote extends Mote {
 
     @Override
     @EnergyCost(28f)
-    public void netReceive(TransmissionPacket packet) {
-        boolean ipResult = (boolean) call("containAddress", packet.getDesIp());
-        boolean portResult = (boolean) call("containPort", packet.getDesPort());
-        if (!ipResult || !portResult) {
-            //如果自身不符合条件
+    public void netReceive(String packet) {
+        ArrayList<NetField> netFields = netStack.parse(packet);
+        if (netFields == null) {
+            //不满足
             return;
         }
-        String printStr = "Received " + packet.getData() + " From " + packet.getSrcIp() + ":" + packet.getSrcPort();
-//        print(printStr);
-        call("print", printStr);
+        call("print", netFields.get(1).value());
+    }
+
+    /**
+     * 由构造函数进行调用
+     * <pre>
+     * public Mote(){
+     *     //....
+     *     equipNetStack()
+     * }
+     * </pre>
+     * 配备网络栈
+     *
+     * @param args 传入参数
+     */
+    @Override
+    public void equipNetStack(Object... args) {
+        String macAddress;
+        if (args[0] instanceof String) {
+            macAddress = (String) args[0];
+        } else {
+            new ParseException("NetStack init error, no suitable macAddress").printStackTrace();
+            return;
+        }
+        this.netStack = new BasicNetStack(macAddress);
     }
 
 }

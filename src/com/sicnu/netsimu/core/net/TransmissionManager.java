@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.core.event.trans;
+package com.sicnu.netsimu.core.net;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.mote.Mote;

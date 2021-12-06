@@ -1,9 +1,10 @@
 package com.sicnu.netsimu.raft.role;
 
-import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
-import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.netsimu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.raft.mote.RaftMote;
+
+import java.util.List;
 
 /**
  * Raft角色
@@ -67,7 +68,7 @@ public abstract class RaftRole {
      *
      * @param packet 数据包
      */
-    public abstract void handlePacket(TransmissionPacket packet);
+    public abstract void handlePacket(List<NetField> packet);
 
     /**
      * <p>

@@ -1,5 +1,7 @@
 package com.sicnu.netsimu.core.mote;
 
+import com.sicnu.netsimu.core.net.BasicNetStack;
+import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
@@ -8,8 +10,7 @@ import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 import com.sicnu.netsimu.ui.InfoOutputManager;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
-import com.sicnu.netsimu.core.event.trans.TransmissionManager;
-import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
+import com.sicnu.netsimu.core.net.TransmissionManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -25,8 +26,10 @@ public abstract class Mote {
     protected int moteId;
     protected float x;
     protected float y;
-    protected List<String> registerIpAddressList;
-    protected List<Integer> registerPortList;
+    /**
+     * 网络栈
+     */
+    protected NetStack netStack;
     /**
      * 获得MoteClass对象，通过反射方式执行函数，进而计算能耗
      */
@@ -51,8 +54,6 @@ public abstract class Mote {
         this.moteId = moteId;
         this.x = x;
         this.y = y;
-        registerIpAddressList = new ArrayList<>();
-        registerPortList = new ArrayList<>();
         energyStatistician = new EnergyStatistician(this);
         this.moteClass = moteClass;
     }
@@ -67,7 +68,20 @@ public abstract class Mote {
      *
      * @param packet 接受到的数据包
      */
-    public abstract void netReceive(TransmissionPacket packet);
+    public abstract void netReceive(String packet);
+
+    /**
+     * 由构造函数进行调用
+     * <pre>
+     * public Mote(){
+     *     //....
+     *     equipNetStack()
+     * }
+     * </pre>
+     * 配备网络栈
+     */
+    public abstract void equipNetStack(Object... args);
+
 
     /**
      * 网络发送函数
@@ -75,16 +89,7 @@ public abstract class Mote {
      * @param packet 发送的数据包
      */
     @EnergyCost(30f)
-    public boolean netSend(TransmissionPacket packet) {
-        //检查自身当前是否可以发出该数据包
-//        if (! containAddress(packet.getSrcIp()) || !containPort(packet.getSrcPort())) {
-        boolean resultIp = (boolean) call("containAddress", (packet.getSrcIp()));
-        boolean resultPort = (boolean) call("containPort", (packet.getSrcPort()));
-        if (!resultIp || !resultPort) {
-            //如果自身并不包含这个ip地址 或者 存在不包含这个端口号的情况
-            //那么本次发送数据包就会失败
-            return false;
-        }
+    public boolean netSend(String packet) {
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
         List<TransmissionManager.Neighbor> neighbors = transmissionManager.getNeighbors(this);
         //从传输管理器中 查询该节点的邻居节点
@@ -102,57 +107,6 @@ public abstract class Mote {
         return true;
     }
 
-    /**
-     * 查看当前Mote，是否注册监听了这个端口
-     *
-     * @param port 端口
-     * @return
-     */
-    @EnergyCost(8.6f)
-    public boolean containPort(Integer port) {
-        for (Integer integer : registerPortList) {
-            if (integer.equals(port)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 查看当前Mote，是否包含有这个Ip地址
-     *
-     * @param ip ip地址
-     * @return
-     */
-    @EnergyCost(8.6f)
-    public boolean containAddress(String ip) {
-        for (String s : registerIpAddressList) {
-            if (s.equals(ip)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * 监听端口，往监听列表中，增加该端口
-     *
-     * @param port 端口号
-     */
-    @EnergyCost(15.8f)
-    public void listenPort(Integer port) {
-        registerPortList.add(port);
-    }
-
-    /**
-     * 监听地址，在监听列表中，增加该地址
-     *
-     * @param ip 被监听的ip地址
-     */
-    @EnergyCost(15.8f)
-    public void listenIp(String ip) {
-        registerIpAddressList.add(ip);
-    }
 
     /**
      * 打印信息到控制台，对应当前的Simulator的时间
@@ -243,30 +197,18 @@ public abstract class Mote {
         return energyStatistician;
     }
 
-    /**
-     * 返回可行Ip地址
-     *
-     * @param index 下标
-     * @return 可行Ip地址
-     */
-    public String getAddress(int index) {
-        return registerIpAddressList.get(index);
-    }
-
-    /**
-     * 取得可行端口
-     *
-     * @param index 下标
-     * @return 可行端口
-     */
-    public int getPort(int index) {
-        return registerPortList.get(index);
-    }
-
     // setters //
 
     public void setSimulator(NetSimulator simulator) {
         this.simulator = simulator;
     }
 
+    /**
+     * 取得 网络栈
+     *
+     * @return 返回网络栈对象引用
+     */
+    public NetStack getNetStack() {
+        return netStack;
+    }
 }

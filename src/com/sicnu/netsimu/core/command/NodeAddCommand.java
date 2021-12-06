@@ -1,13 +1,19 @@
 package com.sicnu.netsimu.core.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.event.trans.TransmissionManager;
+import com.sicnu.netsimu.core.net.TransmissionManager;
 import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
 import lombok.Data;
 
 /**
  * 添加节点命令
+ * <pre>
+ * 1000, NODE_ADD, 1, 50, 100, com.sicnu.netsimu.core.mote.NormalMote
+ * 1000, NODE_ADD, 3, 100, 100, com.sicnu.netsimu.raft.mote.RaftMote , 3
+ * </pre>
+ * 节点类型后，可以跟上额外参数字段
+ * @see NodeDelCommand
  */
 @Data
 public class NodeAddCommand extends Command {

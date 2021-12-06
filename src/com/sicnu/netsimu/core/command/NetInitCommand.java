@@ -3,17 +3,27 @@ package com.sicnu.netsimu.core.command;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.net.NetStack;
 import lombok.Data;
 
 /**
  * “结点网络设置”命令
+ * <pre>
+ *  1000, NET_INIT, 2, mac, EE:EE:EE:EE:EE:03
+ * </pre>
+ * 这里可以设置的字段名，需要参考相对应的NetStack中，
+ * getInfo()和setInfo()可用的key值
+ *
+ * @see NetStack
  */
 @Data
 public class NetInitCommand extends Command {
     // 节点id
     int nodeId;
-    // 操作值类型 指明是ip还是端口
-    Operation operation;
+    /**
+     * 操作值类型 指明是ip还是端口 还是mac
+     */
+    String operation;
     String value;
 
     /**
@@ -21,10 +31,10 @@ public class NetInitCommand extends Command {
      * @param timeStamp 时间戳
      * @param type      指令类型
      * @param nodeId    节点id
-     * @param operation 操作类型，是ip还是port
+     * @param operation "mac" or "ip"
      * @param value     操作值
      */
-    public NetInitCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, Operation operation, String value) {
+    public NetInitCommand(NetSimulator simulator, long timeStamp, String type, int nodeId, String operation, String value) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
         this.operation = operation;
@@ -35,18 +45,8 @@ public class NetInitCommand extends Command {
     public void work() {
         MoteManager moteManager = simulator.getMoteManager();
         Mote mote = moteManager.getMote(nodeId);
-        if (this.operation.equals(Operation.PORT)) {
-            int port = Integer.parseInt(this.value);
-//            mote.listenPort(port);
-            mote.call("listenPort", port);
-        } else {
-            String ip = this.value;
-//            mote.listenIp(ip);
-            mote.call("listenIp", ip);
-        }
+        NetStack netStack = mote.getNetStack();
+        netStack.setInfo(operation, value);
     }
 
-    public enum Operation {
-        IP, PORT
-    }
 }

@@ -2,13 +2,17 @@ package com.sicnu.netsimu.raft.mote;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
-import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
 import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.net.BasicNetStack;
+import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.raft.command.RaftOpCommand;
+import com.sicnu.netsimu.raft.exception.ParseException;
 import com.sicnu.netsimu.raft.role.BasicRaftRole;
 import com.sicnu.netsimu.raft.role.RaftRole;
 import com.sicnu.netsimu.raft.RaftUtils;
+
+import java.util.List;
 
 /**
  * Raft节点 的protected方法名
@@ -22,6 +26,7 @@ import com.sicnu.netsimu.raft.RaftUtils;
  */
 public class RaftMote extends Mote {
     public static final String IP_PREFIX = "192.168.0.";
+    public static final String MAC_PREFIX = "EE:EE:EE:EE:EE:";
     public static final int RAFT_PORT = 3000;
     private int NODE_NUM = 0;
     RaftRole raftRole;
@@ -43,15 +48,11 @@ public class RaftMote extends Mote {
     public RaftMote(NetSimulator simulator, int moteId, float x, float y, String... args) {
         super(simulator, moteId, x, y, RaftMote.class);
         //监听ip地址 合成每个节点的专属Ip地址
-        String ipStr = RaftUtils.convertIpAddressWithMoteId(IP_PREFIX, moteId);
-        //监听该ip地址
-//        listenIp(ipStr);
-        call("listenIp", ipStr);
-        //监听该端口
-        call("listenPort", RAFT_PORT);
+        String selfMacAddress = RaftUtils.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
         //Raft节点记录下的NODE_NUM数
         NODE_NUM = Integer.parseInt(args[0]);
         raftRole = new BasicRaftRole(this, NODE_NUM);
+        equipNetStack(selfMacAddress);
     }
 
     /**
@@ -73,18 +74,39 @@ public class RaftMote extends Mote {
     }
 
     /**
+     * 由构造函数进行调用
+     * <pre>
+     * public Mote(){
+     *     //....
+     *     equipNetStack()
+     * }
+     * </pre>
+     * 配备网络栈
+     *
+     * @param args 初始化网络栈参数
+     */
+    @Override
+    public void equipNetStack(Object... args) {
+        String macAddress;
+        if (args[0] instanceof String) {
+            macAddress = (String) args[0];
+        } else {
+            new ParseException("NetStack init error, no suitable macAddress").printStackTrace();
+            return;
+        }
+        this.netStack = new BasicNetStack(macAddress);
+    }
+
+    /**
      * @param packet 接受到的数据包
      */
     @Override
     @EnergyCost(30f)
-    public void netReceive(TransmissionPacket packet) {
-        boolean ipResult = (boolean) call("containAddress", packet.getDesIp());
-        boolean portResult = (boolean) call("containPort", packet.getDesPort());
-        if (!ipResult || !portResult) {
-            //如果自身不符合条件
-            return;
+    public void netReceive(String packet) {
+        List<NetField> netFields = netStack.parse(packet);
+        if (netFields != null) {
+            raftRole.handlePacket(netFields);
         }
-        raftRole.handlePacket(packet);
     }
 
     /**

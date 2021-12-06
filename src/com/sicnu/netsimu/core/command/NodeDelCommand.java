@@ -4,7 +4,13 @@ import com.sicnu.netsimu.core.NetSimulator;
 import lombok.Data;
 
 /**
- * 删除节点命令
+ * “节点删除”命令
+ * <pre>
+ * 1000, NODE_DEL, 1
+ * </pre>
+ * 删除“节点1”。
+ *
+ * @see NodeAddCommand
  */
 @Data
 public class NodeDelCommand extends Command {

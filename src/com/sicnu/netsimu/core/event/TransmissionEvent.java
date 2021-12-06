@@ -1,6 +1,5 @@
 package com.sicnu.netsimu.core.event;
 
-import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
 import com.sicnu.netsimu.core.mote.Mote;
 import lombok.Data;
 
@@ -13,14 +12,14 @@ import lombok.Data;
 public class TransmissionEvent extends Event {
 
     Mote receiver;
-    TransmissionPacket packet;
+    String packet;
 
     /**
      * @param triggerTime 到达时间
      * @param receiver    接收的节点（引用对象）
      * @param packet      发送的数据包
      */
-    public TransmissionEvent(long triggerTime, Mote receiver, TransmissionPacket packet) {
+    public TransmissionEvent(long triggerTime, Mote receiver, String packet) {
         super(triggerTime);
         this.receiver = receiver;
         this.packet = packet;

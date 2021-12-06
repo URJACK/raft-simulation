@@ -6,8 +6,13 @@ import com.sicnu.netsimu.ui.summary.Summarizer;
 /**
  * “总结指令”
  * 使用该指令可以调用Simulator的总结者进行总结
+ * <pre>
  * 3000, SUMMARY, CALC                   //传入 “CALC” 参数 适配于 IncrementalSummarizer
  * 3000, SUMMARY, OUTPUT                 //传入 “OUTPUT” 参数 适配于 IncrementalSummarizer
+ * </pre>
+ * 这个是为了和ui包中的 Summarizer 进行配合，有些Summarizer需要的参数不同
+ *
+ * @see Summarizer
  */
 public class SummaryCommand extends Command {
 

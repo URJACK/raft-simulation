@@ -1,8 +1,9 @@
 package com.sicnu.netsimu.raft.role;
 
-import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
-import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.net.NetStack;
+import com.sicnu.netsimu.core.net.mac.MACLayer;
 import com.sicnu.netsimu.raft.RaftUtils;
+import com.sicnu.netsimu.raft.exception.ParseException;
 import com.sicnu.netsimu.raft.mote.RaftMote;
 import com.sicnu.netsimu.raft.role.rpc.RPCConvert;
 
@@ -39,11 +40,15 @@ public class RaftSender {
                 //不会发给自己
                 continue;
             }
-            String dstIp = RaftUtils.convertIpAddressWithMoteId(RaftMote.IP_PREFIX, i + 1);
-            String selfIp = mote.getAddress(0);
-            TransmissionPacket packet = new TransmissionPacket(selfIp, dstIp,
-                    RaftMote.RAFT_PORT, RaftMote.RAFT_PORT, rpc.convert());
-            mote.netSend(packet);
+            NetStack stack = mote.getNetStack();
+            String dstMac = RaftUtils.convertMACAddressWithMoteId(RaftMote.MAC_PREFIX, i + 1);
+            try {
+                MACLayer.Header header = new MACLayer.Header(stack.getInfo("mac"), dstMac);
+                String packet = stack.convert(rpc.convert(), header);
+                mote.netSend(packet);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -54,10 +59,14 @@ public class RaftSender {
      * @param rpc       要发送的RPC对象
      */
     public void uniCast(int desMoteId, RPCConvert rpc) {
-        String desIp = RaftUtils.convertIpAddressWithMoteId(RaftMote.IP_PREFIX, desMoteId);
-        String selfIp = mote.getAddress(0);
-        TransmissionPacket packet = new TransmissionPacket(selfIp, desIp,
-                RaftMote.RAFT_PORT, RaftMote.RAFT_PORT, rpc.convert());
-        mote.netSend(packet);
+        NetStack stack = mote.getNetStack();
+        String dstMac = RaftUtils.convertMACAddressWithMoteId(RaftMote.MAC_PREFIX, desMoteId);
+        try {
+            MACLayer.Header header = new MACLayer.Header(stack.getInfo("mac"), dstMac);
+            String packet = stack.convert(rpc.convert(), header);
+            mote.netSend(packet);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 }

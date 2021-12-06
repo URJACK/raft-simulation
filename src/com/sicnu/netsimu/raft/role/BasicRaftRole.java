@@ -1,7 +1,7 @@
 package com.sicnu.netsimu.raft.role;
 
 import com.sicnu.netsimu.core.event.TimeoutEvent;
-import com.sicnu.netsimu.core.event.trans.TransmissionPacket;
+import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.netsimu.raft.RaftUtils;
 import com.sicnu.netsimu.raft.annotation.NotNull;
 import com.sicnu.netsimu.raft.command.RaftOpCommand;
@@ -11,6 +11,8 @@ import com.sicnu.netsimu.raft.mote.RaftMote;
 import com.sicnu.netsimu.raft.role.log.RaftLogItem;
 import com.sicnu.netsimu.raft.role.log.RaftLogTable;
 import com.sicnu.netsimu.raft.role.rpc.*;
+
+import java.util.List;
 
 /**
  * 基础Raft算法实现
@@ -152,25 +154,18 @@ public class BasicRaftRole extends RaftRole {
      * @param packet 数据包
      */
     @Override
-    public void handlePacket(TransmissionPacket packet) {
-        String data = packet.getData();
+    public void handlePacket(List<NetField> packet) {
+        String data = packet.get(1).value();
         //从数据包中取得第一个条数据 --- Raft数据包 标识
         int rpcType = RaftUtils.getFirstValFromString(data);
         switch (rpcType) {
-            case RPC.RPC_ELECT:
-                receiveRPCElect(packet);
-                break;
-            case RPC.RPC_ELECT_RESP:
-                receiveRPCElectResp(packet);
-                break;
-            case RPC.RPC_HEARTBEATS:
-                receiveRPCHeartBeats(packet);
-                break;
-            case RPC.RPC_HEARTBEATS_RESP:
-                receiveRPCHeartBeatsResp(packet);
-                break;
-            default:
+            case RPC.RPC_ELECT -> receiveRPCElect(packet);
+            case RPC.RPC_ELECT_RESP -> receiveRPCElectResp(packet);
+            case RPC.RPC_HEARTBEATS -> receiveRPCHeartBeats(packet);
+            case RPC.RPC_HEARTBEATS_RESP -> receiveRPCHeartBeatsResp(packet);
+            default -> {
                 //没有可以处理的
+            }
         }
     }
 
@@ -210,8 +205,8 @@ public class BasicRaftRole extends RaftRole {
      *
      * @param packet 数据包（心跳包回执）
      */
-    private void receiveRPCHeartBeatsResp(TransmissionPacket packet) {
-        String data = packet.getData();
+    private void receiveRPCHeartBeatsResp(List<NetField> packet) {
+        String data = packet.get(1).value();
         HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(data);
         int followerId = respRPC.getSenderId();
         if (respRPC.getIsMatched() == 1) {
@@ -220,7 +215,6 @@ public class BasicRaftRole extends RaftRole {
             代表Leader与该Follower之间，已经达成了一致，
             此处涉及到对该Follower的相关更新，就必须得根据 Follower回传的matchIndex
              */
-            mote.print("......DEBUG MATCHED: " + respRPC);
             leaderVariable.matchIndexes[followerId] = respRPC.getMatchIndex();
             leaderVariable.nextIndexes[followerId] = respRPC.getMatchIndex() + 1;
         } else {
@@ -229,7 +223,6 @@ public class BasicRaftRole extends RaftRole {
             代表Leader与该Follower之间，仍未达成一致
             此处，我们需要不断降低对该Follower的nextIndex
              */
-            mote.print("......DEBUG NOT MATCHED: " + respRPC);
             if (leaderVariable.nextIndexes[followerId] == 1) {
                 //如果这个时候，它都仍出现了未达成一致
                 new RaftRuntimeException("the nextIndex of " + followerId + " can't be smaller than 1").printStackTrace();
@@ -247,8 +240,8 @@ public class BasicRaftRole extends RaftRole {
      *
      * @param packet 数据包（心跳包）
      */
-    private void receiveRPCHeartBeats(TransmissionPacket packet) {
-        String data = packet.getData();
+    private void receiveRPCHeartBeats(List<NetField> packet) {
+        String data = packet.get(1).value();
         HeartBeatsRPC beatsRPC = new HeartBeatsRPC(data);
 //        mote.print("beats : " + beatsRPC.toString());
         mote.print(raftLogTable.toString());
@@ -298,9 +291,6 @@ public class BasicRaftRole extends RaftRole {
                     它会将这个相同的心跳包的日志内容，直接再加到日志表的末尾去
                      */
                     raftLogTable.addLog(logItem, beatsRPC.getPrevIndex() + 1);
-                    mote.print("DEBUG logItem != null prevLogItem.getTerm()=" + prevLogItem.getTerm() +
-                            " beatsRPC.getPrevTerm()=" + beatsRPC.getPrevTerm() + " " +
-                            " logItem=" + logItem);
                 }
                 // 给予回复
                 HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
@@ -316,8 +306,8 @@ public class BasicRaftRole extends RaftRole {
      *
      * @param packet 数据包（选举包回执）
      */
-    private void receiveRPCElectResp(TransmissionPacket packet) {
-        String data = packet.getData();
+    private void receiveRPCElectResp(List<NetField> packet) {
+        String data = packet.get(1).value();
         ElectionRespRPC rpc = new ElectionRespRPC(data);
         if (rpc.getVoteGranted() == 1) {
             /*
@@ -368,8 +358,8 @@ public class BasicRaftRole extends RaftRole {
      *
      * @param packet 数据包（选举包）
      */
-    private void receiveRPCElect(TransmissionPacket packet) {
-        String data = packet.getData();
+    private void receiveRPCElect(List<NetField> packet) {
+        String data = packet.get(1).value();
         ElectionRPC rpc = new ElectionRPC(data);
         //检查RPC是否满足条件
         boolean result = electRPCValidateChecking(rpc);

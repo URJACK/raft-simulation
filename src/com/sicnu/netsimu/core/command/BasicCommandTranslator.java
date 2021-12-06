@@ -4,9 +4,12 @@ import com.sicnu.netsimu.ui.CommandParseException;
 
 /**
  * BasicCommandTranslator 是一个用户接口类，
- * 与CommandTranslator相比，没有解析额外的指令
+ * 没有解析额外的指令（比如Raft相关指令）
+ * <p>
  * 它可以读取文本（内容是一串串的指令），并解析为若干条指令。
  * 可以作为一个成员变量被传入RaftSimulator之中，进而完成工作。
+ *
+ * @see CommandTranslator
  */
 public class BasicCommandTranslator extends CommandTranslator {
     /**

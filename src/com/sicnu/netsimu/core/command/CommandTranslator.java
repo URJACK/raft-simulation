@@ -33,8 +33,6 @@ public abstract class CommandTranslator {
     protected final HashSet<String> basicCommandTypeHashset;
     // <用户输入的指令名, 对应指令的参数长度>
     protected final HashMap<String, Integer> basicCommandLengthHashMap;
-    // <用户输入的Raft操作名，操作的枚举类型>
-    protected final HashMap<String, NetInitCommand.Operation> netOperationTypeHashMap;
 
     /**
      * 在构造函数中 我们为了能快速的生成指令 我们提前在这边构建两个hashMap
@@ -44,7 +42,6 @@ public abstract class CommandTranslator {
         //初始化对象
         basicCommandTypeHashset = new HashSet<>();
         basicCommandLengthHashMap = new HashMap<>();
-        netOperationTypeHashMap = new HashMap<>();
         //对指令集进行初始化 ---- [所有命令必须]
         basicCommandTypeHashset.add("NODE_ADD");
         basicCommandTypeHashset.add("NODE_DEL");
@@ -60,12 +57,9 @@ public abstract class CommandTranslator {
         basicCommandLengthHashMap.put("NODE_BOOT", 3);
         basicCommandLengthHashMap.put("NODE_SHUT", 3);
         basicCommandLengthHashMap.put("NET_INIT", 5);
-        basicCommandLengthHashMap.put("NET_SEND", 8);
+        basicCommandLengthHashMap.put("NET_SEND", 5);
         basicCommandLengthHashMap.put("DISPLAY_CON", 2);
         basicCommandLengthHashMap.put("SUMMARY", 3);
-        //对网络操作集进行初始化
-        netOperationTypeHashMap.put("ip", NetInitCommand.Operation.IP);
-        netOperationTypeHashMap.put("port", NetInitCommand.Operation.PORT);
         //扩展初始化
         extendInit();
     }
@@ -158,13 +152,11 @@ public abstract class CommandTranslator {
                 case "NET_INIT" ->
                         //生成“初始化网络”命令
                         new NetInitCommand(simulator, timeStamp, commandType, Integer.parseInt(commandStrings[2]),
-                                netOperationTypeHashMap.get(commandStrings[3]), commandStrings[4]);
+                                commandStrings[3], commandStrings[4]);
                 case "NET_SEND" ->
                         // 生成“网络发送”命令
                         new NetSendCommand(simulator, timeStamp, commandType, Integer.parseInt(commandStrings[2]),
-                                commandStrings[3], Integer.parseInt(commandStrings[4]),
-                                commandStrings[5], Integer.parseInt(commandStrings[6]),
-                                commandStrings[7]);
+                                commandStrings[3], commandStrings[4]);
                 case "DISPLAY_CON" ->
                         // 生成控制台展示接口
                         new DisplayCommand(simulator, timeStamp, commandType);
