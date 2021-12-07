@@ -23,11 +23,6 @@ public interface Statistician<T> {
     T getValue(String key);
 
     /**
-     * @return 所有类的统计数据值之和
-     */
-    T getAllSummary();
-
-    /**
      * 清空已经记录的所有统计
      */
     void clear();

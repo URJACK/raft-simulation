@@ -5,6 +5,7 @@ import com.sicnu.netsimu.core.command.CommandTranslator;
 import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 import com.sicnu.netsimu.ui.summary.IncrementalSummarizerWithConsole;
 import com.sicnu.netsimu.raft.command.RaftCommandTranslator;
+import com.sicnu.netsimu.ui.summary.IncrementalSummarizerWithExcel;
 
 public class Main {
 

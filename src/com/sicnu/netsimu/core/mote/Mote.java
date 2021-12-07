@@ -37,7 +37,7 @@ public abstract class Mote {
     /**
      * 统计者
      */
-    protected Statistician<Float> energyStatistician;
+    protected EnergyStatistician energyStatistician;
 
     /**
      * 其他节点的构造函数只能在这基础上实现
@@ -89,22 +89,9 @@ public abstract class Mote {
      * @param packet 发送的数据包
      */
     @EnergyCost(30f)
-    public boolean netSend(String packet) {
+    public final void netSend(String packet) {
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
-        List<TransmissionManager.Neighbor> neighbors = transmissionManager.getNeighbors(this);
-        //从传输管理器中 查询该节点的邻居节点
-        for (TransmissionManager.Neighbor neighbor : neighbors) {
-            //获取到与neighbor的距离
-            float distance = neighbor.getDistance();
-            //获取到neighbor指向的mote本身
-            Mote mote = neighbor.getMote();
-            //无论该节点的ip和端口信息是否满足 数据包的目的地要求 我们都将其进行传输
-            simulator.getEventManager().pushEvent(
-                    new TransmissionEvent(transmissionManager.calcTransmissionTime(distance) + simulator.getTime(),
-                            mote, packet)
-            );
-        }
-        return true;
+        transmissionManager.moteSendPacket(this,packet);
     }
 
 
@@ -193,7 +180,7 @@ public abstract class Mote {
         return y;
     }
 
-    public Statistician<Float> getEnergyStatistician() {
+    public EnergyStatistician getEnergyStatistician() {
         return energyStatistician;
     }
 

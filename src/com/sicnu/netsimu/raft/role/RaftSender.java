@@ -1,5 +1,6 @@
 package com.sicnu.netsimu.raft.role;
 
+import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.net.mac.MACLayer;
 import com.sicnu.netsimu.raft.RaftUtils;
@@ -40,15 +41,16 @@ public class RaftSender {
                 //不会发给自己
                 continue;
             }
-            NetStack stack = mote.getNetStack();
-            String dstMac = RaftUtils.convertMACAddressWithMoteId(RaftMote.MAC_PREFIX, i + 1);
-            try {
-                MACLayer.Header header = new MACLayer.Header(stack.getInfo("mac"), dstMac);
-                String packet = stack.convert(rpc.convert(), header);
-                mote.netSend(packet);
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
+        }
+
+        NetStack stack = mote.getNetStack();
+        String dstMac = MACLayer.BROAD_CAST;
+        try {
+            MACLayer.Header header = new MACLayer.Header(stack.getInfo("mac"), dstMac);
+            String packet = stack.convert(rpc.convert(), header);
+            mote.netSend(packet);
+        } catch (ParseException e) {
+            e.printStackTrace();
         }
     }
 

@@ -3,6 +3,7 @@ package com.sicnu.netsimu.ui.summary;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.statis.EnergyStatistician;
 import com.sicnu.netsimu.core.statis.Statistician;
 
 import java.util.*;
@@ -10,10 +11,8 @@ import java.util.*;
 /**
  * 增量总结器
  * 通过summarize调用两个内置方法
- *
  */
 public abstract class IncrementalSummarizer extends Summarizer {
-    HashMap<Integer, List<Float>> incrementalMap;
     public static final String OUTPUT = "OUTPUT";
     public static final String CALC = "CALC";
 
@@ -22,41 +21,32 @@ public abstract class IncrementalSummarizer extends Summarizer {
      */
     public IncrementalSummarizer(NetSimulator simulator) {
         super(simulator);
-        incrementalMap = new HashMap<>();
     }
 
     /**
      * 首先调用processBasicCalc()
      * 如果 param == "OUTPUT" 则调用 processOutput()
+     *
      * @param param 触发动作参数，用来控制是否调用 processOutput()
      */
     @Override
-    public void summarize(String param) {
+    public final void summarize(String param) {
         processBasicCalc();
         if (param.equals(OUTPUT)) {
             processOutput();
         }
     }
 
+    /**
+     * 当传入的param是 OUTPUT的时候，summarize() 会调用该方法。
+     */
     protected abstract void processOutput();
 
     /**
      * 基础增量计算
-     * 所有的IncrementalSummarizer都应当调用该方法计算各个数据的增量
+     * <p>
+     * 无论传入的是 CALC 还是 OUTPUT，
+     * summarize都会调用该方法，计算各个数据的增量
      */
-    protected void processBasicCalc() {
-        MoteManager moteManager = simulator.getMoteManager();
-        ArrayList<Mote> allMotes = moteManager.getAllMotes();
-        for (Mote mote : allMotes) {
-            Statistician<Float> energyStatistician = mote.getEnergyStatistician();
-            //获得每个节点的能耗
-            Float statisticianAllSummary = energyStatistician.getAllSummary();
-            //清空这个时间点的能耗记录
-            energyStatistician.clear();
-            //将这次到上次调用之间时段 “时段能耗数据” 进行统计
-            List<Float> list = incrementalMap.computeIfAbsent(mote.getMoteId(), k -> new LinkedList<>());
-            //将“时段能耗数据”塞入对应节点的列表中
-            list.add(statisticianAllSummary);
-        }
-    }
+    protected abstract void processBasicCalc();
 }

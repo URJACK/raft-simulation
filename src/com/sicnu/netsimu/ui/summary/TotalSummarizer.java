@@ -3,6 +3,7 @@ package com.sicnu.netsimu.ui.summary;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.statis.EnergyStatistician;
 import com.sicnu.netsimu.core.statis.Statistician;
 
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ public class TotalSummarizer extends Summarizer {
         MoteManager moteManager = simulator.getMoteManager();
         ArrayList<Mote> allMotes = moteManager.getAllMotes();
         for (Mote mote : allMotes) {
-            Statistician<Float> statistician = mote.getEnergyStatistician();
+            EnergyStatistician statistician = mote.getEnergyStatistician();
             System.out.println(mote.getMoteId() + " : " + statistician.getAllSummary());
         }
     }

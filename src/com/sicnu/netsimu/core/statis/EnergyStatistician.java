@@ -37,7 +37,6 @@ public class EnergyStatistician implements Statistician<Float> {
         return map.get(key);
     }
 
-    @Override
     public Float getAllSummary() {
         return sum;
     }
