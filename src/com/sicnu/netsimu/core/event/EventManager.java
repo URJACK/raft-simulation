@@ -54,14 +54,14 @@ public class EventManager {
     /**
      * 从事件队列中，提取事件，并进行执行该事件
      * 这里需要着重检测TimeoutEvent的Loop
+     * <p>
+     * 该函数会更新 Simulator 中的 time
      */
     public void exec() {
         Event ev = queue.poll();
         assert ev != null;
         simulator.setTime(ev.getTriggerTime());
         ev.work();
-        //每当触发一个事件 就开始输出信息+
-        simulator.getInfoOutputManager().outputInfo();
         //对带loop的TimeoutEvent事件做循环处理
         if (ev instanceof TimeoutEvent) {
             TimeoutEvent timeoutEvent = (TimeoutEvent) ev;
@@ -72,5 +72,9 @@ public class EventManager {
                 queue.add(timeoutEvent);
             }
         }
+    }
+
+    public Event peekEvent() {
+        return queue.peek();
     }
 }

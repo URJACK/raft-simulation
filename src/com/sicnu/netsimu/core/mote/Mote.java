@@ -1,21 +1,16 @@
 package com.sicnu.netsimu.core.mote;
 
-import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
-import com.sicnu.netsimu.core.statis.Statistician;
 import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 import com.sicnu.netsimu.ui.InfoOutputManager;
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.event.TransmissionEvent;
 import com.sicnu.netsimu.core.net.TransmissionManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 节点对象 是我们仿真程序中的一个基础类
@@ -91,7 +86,7 @@ public abstract class Mote {
     @EnergyCost(30f)
     public final void netSend(String packet) {
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
-        transmissionManager.moteSendPacket(this,packet);
+        transmissionManager.moteSendPacket(this, packet);
     }
 
 
@@ -180,7 +175,12 @@ public abstract class Mote {
         return y;
     }
 
-    public EnergyStatistician getEnergyStatistician() {
+    /**
+     * 取得当前节点的能耗统计器
+     *
+     * @return 返回能耗统计器引用对象
+     */
+    public final EnergyStatistician getSingleMoteEnergyStatistician() {
         return energyStatistician;
     }
 

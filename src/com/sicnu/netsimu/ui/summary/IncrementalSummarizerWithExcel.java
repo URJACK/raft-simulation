@@ -5,7 +5,6 @@ import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
 import com.sicnu.netsimu.core.net.TransmissionManager;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
-import com.sicnu.netsimu.core.statis.TransmitStatistician;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -62,21 +61,14 @@ public class IncrementalSummarizerWithExcel extends IncrementalSummarizer {
         rowIndex++;
         //添加新的数据 添加每个节点的4项 传输指标
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
-        TransmitStatistician successSendStatistician = transmissionManager.getSuccessSendStatistician();
-        TransmitStatistician failedSendStatistician = transmissionManager.getFailedSendStatistician();
-        TransmitStatistician successReceiveStatistician = transmissionManager.getSuccessReceiveStatistician();
-        TransmitStatistician failedReceiveStatistician = transmissionManager.getFailedReceiveStatistician();
         for (Map.Entry<Integer, List<Float>> entry : energyCalcMap.entrySet()) {
             Integer moteId = entry.getKey();
-            int sendSuccessTimes = successSendStatistician.getValue(String.valueOf(moteId));
-            int sendFailedTimes = failedSendStatistician.getValue(String.valueOf(moteId));
-            int receiveSuccessTimes = successReceiveStatistician.getValue(String.valueOf(moteId));
-            int receiveFailedTimes = failedReceiveStatistician.getValue(String.valueOf(moteId));
+            TransmissionManager.StatisticInfo info = transmissionManager.getStatisticInformationWithId(moteId);
 
-            float sendSuccessRate = (float) sendSuccessTimes / (sendSuccessTimes + sendFailedTimes);
-            float sendFailedRate = (float) sendFailedTimes / (sendSuccessTimes + sendFailedTimes);
-            float receiveSuccessRate = (float) receiveSuccessTimes / (receiveSuccessTimes + receiveFailedTimes);
-            float receiveFailedRate = (float) receiveFailedTimes / (receiveSuccessTimes + receiveFailedTimes);
+            float sendSuccessRate = info.getSendSuccessRate();
+            float sendFailedRate = info.getSendFailedRate();
+            float receiveSuccessRate = info.getReceiveSuccessRate();
+            float receiveFailedRate = info.getReceiveFailedRate();
 
             XSSFRow row = sheet.createRow(rowIndex);
             XSSFCell moteIdCell = row.createCell(0);
@@ -109,7 +101,7 @@ public class IncrementalSummarizerWithExcel extends IncrementalSummarizer {
         MoteManager moteManager = simulator.getMoteManager();
         ArrayList<Mote> allMotes = moteManager.getAllMotes();
         for (Mote mote : allMotes) {
-            EnergyStatistician energyStatistician = mote.getEnergyStatistician();
+            EnergyStatistician energyStatistician = mote.getSingleMoteEnergyStatistician();
             //获得每个节点的能耗
             Float statisticianAllSummary = energyStatistician.getAllSummary();
             //清空这个时间点的能耗记录

@@ -2,3 +2,4 @@ resources
 .idea
 target
 output
+src/com/sicnu/Main.java

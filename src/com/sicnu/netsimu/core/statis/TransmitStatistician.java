@@ -1,6 +1,6 @@
 package com.sicnu.netsimu.core.statis;
 
-import com.sicnu.netsimu.raft.annotation.AllowNull;
+import com.sicnu.netsimu.annotation.AllowNull;
 
 import java.util.HashMap;
 

@@ -2,6 +2,8 @@ package com.sicnu.netsimu.core;
 
 import com.sicnu.netsimu.core.command.Command;
 import com.sicnu.netsimu.core.command.CommandTranslator;
+import com.sicnu.netsimu.core.event.Event;
+import com.sicnu.netsimu.core.event.EventInterceptor;
 import com.sicnu.netsimu.core.event.EventManager;
 import com.sicnu.netsimu.core.net.TransmissionManager;
 import com.sicnu.netsimu.core.mote.MoteManager;
@@ -29,6 +31,10 @@ public class NetSimulator {
     InfoOutputManager infoOutputManager;
     //总结者
     Summarizer summarizer;
+    //事件处理之前的 拦截器
+    EventInterceptor preEventInterceptor;
+    //事件处理之后的 拦截器
+    EventInterceptor postEventInterceptor;
 
 
     /**
@@ -57,7 +63,18 @@ public class NetSimulator {
      */
     public void run() {
         while (!eventManager.isEmpty()) {
+            Event event = eventManager.peekEvent();
+            if (preEventInterceptor != null) {
+                preEventInterceptor.work(event);
+            }
+            // 执行一个离散事件 并刷新自身记录的仿真世界中的时间
             eventManager.exec();
+            if (postEventInterceptor != null) {
+                postEventInterceptor.work(event);
+            }
+            // 每当触发一个事件 就开始输出信息+
+            getInfoOutputManager().outputInfo();
+
             if (time > endTime) {
                 //超过了这个时间，仿真就结束，不再遍历事件
                 break;
@@ -114,4 +131,11 @@ public class NetSimulator {
         return summarizer;
     }
 
+    public void setPreEventInterceptor(EventInterceptor preEventInterceptor) {
+        this.preEventInterceptor = preEventInterceptor;
+    }
+
+    public void setPostEventInterceptor(EventInterceptor postEventInterceptor) {
+        this.postEventInterceptor = postEventInterceptor;
+    }
 }

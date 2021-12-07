@@ -10,7 +10,7 @@ import lombok.Data;
  * 添加节点命令
  * <pre>
  * 1000, NODE_ADD, 1, 50, 100, com.sicnu.netsimu.core.mote.NormalMote
- * 1000, NODE_ADD, 3, 100, 100, com.sicnu.netsimu.raft.mote.RaftMote , 3
+ * 1000, NODE_ADD, 3, 100, 100, com.sicnu.raft.mote.RaftMote , 3
  * </pre>
  * 节点类型后，可以跟上额外参数字段
  * @see NodeDelCommand

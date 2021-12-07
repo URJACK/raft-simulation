@@ -1,8 +1,8 @@
 package com.sicnu.netsimu.core.net;
 
-import com.sicnu.netsimu.core.net.ip.IPLayer;
-import com.sicnu.netsimu.core.net.mac.MACLayer;
-import com.sicnu.netsimu.raft.exception.ParseException;
+import com.sicnu.netsimu.core.net.ip.BasicIPLayer;
+import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
+import com.sicnu.netsimu.exception.ParseException;
 
 import java.util.ArrayList;
 
@@ -11,11 +11,11 @@ import java.util.ArrayList;
  * NetStack 的 parse() 与 convert() 本质上就是不断调用 NetLayer的 同名函数
  *
  * @see NetLayer
- * @see MACLayer
+ * @see BasicMACLayer
  */
 public class BasicNetStack extends NetStack {
-    MACLayer macLayer;
-    IPLayer ipLayer;
+    BasicMACLayer macLayer;
+    BasicIPLayer ipLayer;
     /**
      * convert 与 parse 都依赖于该变量。
      * 它是不同NetLayer传输数据的分隔符
@@ -31,8 +31,8 @@ public class BasicNetStack extends NetStack {
      * @param macAddress 当前设备的MAC地址
      */
     public BasicNetStack(String macAddress) {
-        macLayer = new MACLayer(macAddress);
-        ipLayer = new IPLayer();
+        macLayer = new BasicMACLayer(macAddress);
+        ipLayer = new BasicIPLayer();
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.sicnu.netsimu.core.net;
 
-import com.sicnu.netsimu.raft.exception.ParseException;
+import com.sicnu.netsimu.exception.ParseException;
 
 public abstract class NetLayer {
     /**

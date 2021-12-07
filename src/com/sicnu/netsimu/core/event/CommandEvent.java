@@ -19,6 +19,10 @@ public class CommandEvent extends Event {
         this.command = command;
     }
 
+    public Command getCommand() {
+        return command;
+    }
+
     @Override
     public void work() {
         command.work();

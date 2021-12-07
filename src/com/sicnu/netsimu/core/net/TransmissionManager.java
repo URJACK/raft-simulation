@@ -6,16 +6,12 @@ import com.sicnu.netsimu.core.command.NodeDelCommand;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
 import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
-import com.sicnu.netsimu.core.statis.Statistician;
 import com.sicnu.netsimu.core.statis.TransmitStatistician;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * TransmissionManager 传输管理者
@@ -165,8 +161,7 @@ public class TransmissionManager {
             //得到的随机值
             float randomVote = NetSimulationRandom.nextFloat();
             float errorRate = neighbor.getErrorRate();
-            TransmissionEvent event = new TransmissionEvent(calcTransmissionTime(distance) + simulator.getTime(),
-                    senderMote, receiverMote, packet);
+            TransmissionEvent event = new TransmissionEvent(calcTransmissionTime(distance) + simulator.getTime(), senderMote, receiverMote, packet);
             if (randomVote > errorRate) {
                 //获取到neighbor指向的mote本身
                 //无论该节点的ip和端口信息是否满足 数据包的目的地要求 我们都将其进行传输
@@ -209,6 +204,23 @@ public class TransmissionManager {
     }
 
     /**
+     * 传入节点个数，取得这些统计信息
+     *
+     * @param moteId 节点id
+     * @return 节点的传输统计信息
+     */
+    public StatisticInfo getStatisticInformationWithId(int moteId) {
+        int sendSuccessTime = successSendStatistician.getValue(String.valueOf(moteId));
+        int sendFailedTime = failedSendStatistician.getValue(String.valueOf(moteId));
+        int receiveSuccessTime = successReceiveStatistician.getValue(String.valueOf(moteId));
+        int receiveFailedTime = failedReceiveStatistician.getValue(String.valueOf(moteId));
+
+        StatisticInfo info = new StatisticInfo(moteId, sendSuccessTime, sendFailedTime, receiveSuccessTime, receiveFailedTime);
+        return info;
+
+    }
+
+    /**
      * 邻居对象
      * 这是为了防止重复计算距离而设立的一个类
      */
@@ -231,6 +243,71 @@ public class TransmissionManager {
             this.mote = mote;
             this.distance = distance;
             this.errorRate = errorRate;
+        }
+    }
+
+    /**
+     * 统计信息
+     */
+    @Data
+    public static class StatisticInfo {
+        /**
+         * 节点id
+         */
+        int moteId;
+        /**
+         * 该节点的 发送成功次数
+         */
+        int sendSuccessTime;
+        /**
+         * 该节点的 发送失败次数
+         */
+        int sendFailedTime;
+        /**
+         * 该节点的 接受成功次数
+         */
+        int receivedSuccessTime;
+        /**
+         * 该节点的 接受失败次数
+         */
+        int receiveFailedTime;
+        /**
+         * 该结点的 发送成功率
+         */
+        float sendSuccessRate;
+        /**
+         * 该结点的 发送失败率
+         */
+        float sendFailedRate;
+        /**
+         * 该结点的 接受成功率
+         */
+        float receiveSuccessRate;
+        /**
+         * 该结点的 接受失败率
+         */
+        float receiveFailedRate;
+
+        /**
+         * 统计信息构造函数
+         *
+         * @param moteId              节点id
+         * @param sendSuccessTime     发送成功率
+         * @param sendFailedTime      发送失败率
+         * @param receivedSuccessTime 接受成功率
+         * @param receiveFailedTime   接受失败率
+         */
+        public StatisticInfo(int moteId, int sendSuccessTime, int sendFailedTime, int receivedSuccessTime, int receiveFailedTime) {
+            this.moteId = moteId;
+            this.sendSuccessTime = sendSuccessTime;
+            this.sendFailedTime = sendFailedTime;
+            this.receivedSuccessTime = receivedSuccessTime;
+            this.receiveFailedTime = receiveFailedTime;
+
+            this.sendSuccessRate = (float) this.sendSuccessTime / (this.sendSuccessTime + this.sendFailedTime);
+            this.sendFailedRate = (float) this.sendFailedTime / (this.sendSuccessTime + this.sendFailedTime);
+            this.receiveSuccessRate = (float) this.receivedSuccessTime / (this.receivedSuccessTime + this.receiveFailedTime);
+            this.receiveFailedRate = (float) this.receiveFailedTime / (this.receivedSuccessTime + this.receiveFailedTime);
         }
     }
 }

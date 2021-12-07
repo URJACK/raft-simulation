@@ -23,9 +23,9 @@
 因原定名称是`RaftSimulation`，所以我编写了raft包，
 用户可以使用其中的`RaftMote`来<u>进行Raft的相关实验</u>。
 
-raft包使用 `com.sicnu.netsimu.raft` ，也就是核心部分作为依赖，并进行了如下操作：
+raft包使用 `com.sicnu.raft` ，也就是核心部分作为依赖，并进行了如下操作：
 
-1. 编写 `com.sicnu.netsimu.raft.command` ：
+1. 编写 `com.sicnu.raft.command` ：
 
    你需要编写新的命令，命令的编写方法。每个命令必须传入三个基础属性： `simulator、timestamp、type`
 
@@ -52,7 +52,7 @@ raft包使用 `com.sicnu.netsimu.raft` ，也就是核心部分作为依赖，�
    }
    ```
 
-2. 编写了 `com.sicnu.netsimu.raft.mote` 中的 `RaftMote` 
+2. 编写了 `com.sicnu.raft.mote` 中的 `RaftMote` 
 
    ```java
    public class RaftMote extends Mote {

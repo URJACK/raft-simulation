@@ -5,8 +5,6 @@ import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
 import com.sicnu.netsimu.core.net.TransmissionManager;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
-import com.sicnu.netsimu.core.statis.Statistician;
-import com.sicnu.netsimu.core.statis.TransmitStatistician;
 
 import java.util.*;
 
@@ -36,25 +34,15 @@ public class IncrementalSummarizerWithConsole extends IncrementalSummarizer {
     @Override
     protected void processOutput() {
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
-        TransmitStatistician successSendStatistician = transmissionManager.getSuccessSendStatistician();
-        TransmitStatistician failedSendStatistician = transmissionManager.getFailedSendStatistician();
-        TransmitStatistician successReceiveStatistician = transmissionManager.getSuccessReceiveStatistician();
-        TransmitStatistician failedReceiveStatistician = transmissionManager.getFailedReceiveStatistician();
-
         for (Map.Entry<Integer, List<Float>> entry : energyCalcMap.entrySet()) {
             Integer moteId = entry.getKey();
-            List<Float> list = entry.getValue();
-            System.out.print("Mote " + moteId + " : ");
-            System.out.print(list);
-            int sendSuccessTimes = successSendStatistician.getValue(String.valueOf(moteId));
-            int sendFailedTimes = failedSendStatistician.getValue(String.valueOf(moteId));
-            int receiveSuccessTimes = successReceiveStatistician.getValue(String.valueOf(moteId));
-            int receiveFailedTimes = failedReceiveStatistician.getValue(String.valueOf(moteId));
 
-            float sendSuccessRate = (float) sendSuccessTimes / (sendSuccessTimes + sendFailedTimes);
-            float sendFailedRate = (float) sendFailedTimes / (sendSuccessTimes + sendFailedTimes);
-            float receiveSuccessRate = (float) receiveSuccessTimes / (receiveSuccessTimes + receiveFailedTimes);
-            float receiveFailedRate = (float) receiveFailedTimes / (receiveSuccessTimes + receiveFailedTimes);
+            TransmissionManager.StatisticInfo info = transmissionManager.getStatisticInformationWithId(moteId);
+
+            float sendSuccessRate = info.getSendSuccessRate();
+            float sendFailedRate = info.getSendFailedRate();
+            float receiveSuccessRate = info.getReceiveSuccessRate();
+            float receiveFailedRate = info.getReceiveFailedRate();
 
             System.out.println();
             System.out.print(" 平均送达率" + sendSuccessRate);
@@ -75,7 +63,7 @@ public class IncrementalSummarizerWithConsole extends IncrementalSummarizer {
         MoteManager moteManager = simulator.getMoteManager();
         ArrayList<Mote> allMotes = moteManager.getAllMotes();
         for (Mote mote : allMotes) {
-            EnergyStatistician energyStatistician = mote.getEnergyStatistician();
+            EnergyStatistician energyStatistician = mote.getSingleMoteEnergyStatistician();
             //获得每个节点的能耗
             Float statisticianAllSummary = energyStatistician.getAllSummary();
             //清空这个时间点的能耗记录

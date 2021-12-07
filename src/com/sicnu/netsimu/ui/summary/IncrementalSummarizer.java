@@ -30,10 +30,12 @@ public abstract class IncrementalSummarizer extends Summarizer {
      * @param param 触发动作参数，用来控制是否调用 processOutput()
      */
     @Override
-    public final void summarize(String param) {
-        processBasicCalc();
-        if (param.equals(OUTPUT)) {
-            processOutput();
+    public void summarize(String param) {
+        if (param.equals(CALC) || param.equals(OUTPUT)) {
+            processBasicCalc();
+            if (param.equals(OUTPUT)) {
+                processOutput();
+            }
         }
     }
 

@@ -4,11 +4,9 @@ import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetField;
-import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.statis.EnergyCost;
-import com.sicnu.netsimu.raft.RaftUtils;
-import com.sicnu.netsimu.raft.exception.ParseException;
-import lombok.Data;
+import com.sicnu.netsimu.core.utils.MoteCalculate;
+import com.sicnu.netsimu.exception.ParseException;
 
 import java.util.ArrayList;
 
@@ -27,7 +25,7 @@ public class NormalMote extends Mote {
      */
     public NormalMote(NetSimulator simulator, int moteId, float x, float y, String... args) {
         super(simulator, moteId, x, y, NormalMote.class);
-        String selfMacAddress = RaftUtils.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
+        String selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
         equipNetStack(selfMacAddress);
     }
 

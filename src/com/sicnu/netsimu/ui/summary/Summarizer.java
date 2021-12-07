@@ -4,9 +4,16 @@ import com.sicnu.netsimu.core.NetSimulator;
 
 /**
  * 总结者 用自己的方法来对整个数据进行总结统计
+ * <p>
+ * 在NetSimulator中进行调用
+ * <pre>
+ * summarizer.summarize(param);
+ * </pre>
+ *
+ * @see NetSimulator
  */
 public abstract class Summarizer {
-    NetSimulator simulator;
+    protected NetSimulator simulator;
 
     /**
      * @param simulator 网络模拟器对象引用
