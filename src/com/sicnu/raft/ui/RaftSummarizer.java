@@ -163,7 +163,6 @@ public class RaftSummarizer extends IncrementalSummarizer {
      */
     private void raftPreInterception() {
         Event peekEvent = simulator.getEventManager().peekEvent();
-        System.out.println(peekEvent.getClass());
         if (peekEvent instanceof CommandEvent) {
             //我们先判定这是否是一个命令事件 之后再去判定它的命令类型
             CommandEvent event = (CommandEvent) peekEvent;
