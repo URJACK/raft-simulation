@@ -138,4 +138,16 @@ public class RaftMote extends Mote {
     public RaftLogTable getLogTable() {
         return raftRole.getLogTable();
     }
+
+    /**
+     * 获取到当前节点的角色信息。
+     * <p>
+     * 因为角色信息没有存储在RaftMote这个类中，而是存储在RaftRole中，
+     * 所以我们这里要通过RaftRole对角色信息进行返还
+     *
+     * @see RaftRole
+     */
+    public int getRole() {
+        return raftRole.getRole();
+    }
 }

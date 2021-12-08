@@ -12,13 +12,10 @@ import com.sicnu.netsimu.ui.summary.Summarizer;
 public class RaftCalculateInPostEventInterceptor extends EventInterceptor {
     RaftSummarizer summarizer;
 
-    public RaftCalculateInPostEventInterceptor(NetSimulator simulator, Summarizer summarizer) throws Exception {
+
+    public RaftCalculateInPostEventInterceptor(NetSimulator simulator, RaftSummarizer summarizer) throws Exception {
         super(simulator);
-        if (summarizer instanceof RaftSummarizer) {
-            this.summarizer = (RaftSummarizer) summarizer;
-        } else {
-            throw new Exception("Summarizer Type Error");
-        }
+        this.summarizer = summarizer;
     }
 
 
@@ -26,7 +23,7 @@ public class RaftCalculateInPostEventInterceptor extends EventInterceptor {
     public void work(Event event) {
         if (event instanceof TransmissionEvent || event instanceof CommandEvent) {
             // 如果是传输事件、或者是外部命令，才有可能导致 Raft的日志 发生变化
-            summarizer.summarize(RaftSummarizer.SYNC_POST);
+            summarizer.summarize(RaftSummarizer.RAFT_POST);
         }
     }
 }

@@ -15,6 +15,8 @@ import java.util.*;
 import com.sicnu.netsimu.core.net.TransmissionManager;
 import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.raft.mote.RaftMote;
+import com.sicnu.raft.role.BasicRaftRole;
+import com.sicnu.raft.role.RaftRole;
 import com.sicnu.raft.role.log.RaftLogTable;
 
 /**
@@ -42,14 +44,14 @@ public class RaftSummarizer extends IncrementalSummarizer {
      *
      * @see RaftCalculateInPreEventInterceptor
      */
-    public static final String SYNC_PRE = "SYNC_PRE";
+    public static final String RAFT_PRE = "RAFT_PRE";
     /**
      * 同步参数 SYNC_POST
      * Summarizer 可以通过 PostEventInterceptor 传入SYNC_POST
      *
      * @see RaftCalculateInPostEventInterceptor
      */
-    public static final String SYNC_POST = "SYNC_POST";
+    public static final String RAFT_POST = "RAFT_POST";
     /**
      * 统计节点能耗
      * {moteId, 对应的节点能耗数据(按时间段) }
@@ -59,10 +61,23 @@ public class RaftSummarizer extends IncrementalSummarizer {
     // 平均丢包率等指标，不需要在此处得出，使用
 
     /**
-     * 主要会涉及到 raftValidateEquipInPre() 和 raftValidateCheckInPost() 两个方法
+     * 该变量主要用来统计 “Raft各个节点是否达成数据一致性”
+     * 主要在 preInterceptor 和 postInterceptor 中都需要有使用，
+     * 主要与 TransmissionEvent 和 CommandEvent 有关
+     *
+     * @see TransmissionEvent
+     * @see CommandEvent
      */
     RaftDataSyncVariable raftDataSyncVariable;
 
+    /**
+     * 该变量主要用来统计 “Raft选举成功与失败的结果”
+     * <p>
+     * 主要在 preInterceptor 中使用，主要与ElectionTimeoutEvent有关。
+     *
+     * @see BasicRaftRole.ElectionTimeoutEvent
+     */
+    RaftElectVariable raftElectVariable;
 
     /**
      * @param simulator 网络模拟器对象引用
@@ -72,6 +87,7 @@ public class RaftSummarizer extends IncrementalSummarizer {
         super(simulator);
         energyCalcMap = new HashMap<>();
         raftDataSyncVariable = new RaftDataSyncVariable(n);
+        raftElectVariable = new RaftElectVariable(n);
     }
 
     /**
@@ -82,10 +98,10 @@ public class RaftSummarizer extends IncrementalSummarizer {
     @Override
     public void summarize(String param) {
         super.summarize(param);
-        if (param.equals(SYNC_PRE)) {
-            raftValidateEquipInPre();
-        } else if (param.equals(SYNC_POST)) {
-            raftValidateCheckInPost();
+        if (param.equals(RAFT_PRE)) {
+            raftPreInterception();
+        } else if (param.equals(RAFT_POST)) {
+            raftPostInterception();
         }
     }
 
@@ -97,6 +113,10 @@ public class RaftSummarizer extends IncrementalSummarizer {
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
         for (Map.Entry<Integer, List<Float>> entry : energyCalcMap.entrySet()) {
             Integer moteId = entry.getKey();
+            List<Float> energyCostIncrementalRecordsOfOneMote = entry.getValue();
+
+            System.out.println("Mote " + moteId + " :");
+            System.out.println(energyCostIncrementalRecordsOfOneMote);
 
             TransmissionManager.StatisticInfo info = transmissionManager.getStatisticInformationWithId(moteId);
 
@@ -105,7 +125,6 @@ public class RaftSummarizer extends IncrementalSummarizer {
             float receiveSuccessRate = info.getReceiveSuccessRate();
             float receiveFailedRate = info.getReceiveFailedRate();
 
-            System.out.println();
             System.out.print(" 平均送达率" + sendSuccessRate);
             System.out.print(" 平均发送丢包率" + sendFailedRate);
             System.out.println();
@@ -114,6 +133,7 @@ public class RaftSummarizer extends IncrementalSummarizer {
             System.out.println();
         }
         System.out.println(raftDataSyncVariable.consensusTimes);
+        System.out.println(raftElectVariable.electionStatuses);
     }
 
     /**
@@ -141,8 +161,9 @@ public class RaftSummarizer extends IncrementalSummarizer {
      * @see TransmissionEvent
      * @see CommandEvent
      */
-    private void raftValidateEquipInPre() {
+    private void raftPreInterception() {
         Event peekEvent = simulator.getEventManager().peekEvent();
+        System.out.println(peekEvent.getClass());
         if (peekEvent instanceof CommandEvent) {
             //我们先判定这是否是一个命令事件 之后再去判定它的命令类型
             CommandEvent event = (CommandEvent) peekEvent;
@@ -162,8 +183,20 @@ public class RaftSummarizer extends IncrementalSummarizer {
                 int moteId = receiver.getMoteId();
                 raftDataSyncVariable.raftNeedCheckQueue.addLast(moteId);
             }
-        } else {
-            new Exception("Event Type Exception").printStackTrace();
+        } else if (peekEvent instanceof BasicRaftRole.ElectionTimeoutEvent) {
+            //如果是一个选举事件 我们在其开始之前就进行处理
+            BasicRaftRole.ElectionTimeoutEvent event = (BasicRaftRole.ElectionTimeoutEvent) peekEvent;
+            //我们获取到选举事件对应的节点
+            RaftMote raftMote = (RaftMote) event.getSelfMote();
+            //我们对该节点
+            int candidateRole = raftMote.getRole();
+            if (candidateRole != RaftRole.ROLE_LEADER) {
+                //如果节点在选举结束的时候，仍未成为LEADER，就说明该次选举失败了
+                raftElectVariable.addElection(event.getTerm(), raftMote.getMoteId(), false);
+            } else {
+                //如果节点在选举结束的时候，成为了LEADER，就说明该次选举成功了
+                raftElectVariable.addElection(event.getTerm(), raftMote.getMoteId(), true);
+            }
         }
     }
 
@@ -180,7 +213,7 @@ public class RaftSummarizer extends IncrementalSummarizer {
      * @see TransmissionEvent
      * @see CommandEvent
      */
-    private void raftValidateCheckInPost() {
+    private void raftPostInterception() {
         while (!raftDataSyncVariable.raftNeedCheckQueue.isEmpty()) {
             //首先从判定队列中 取出需要被判定的节点号
             Integer moteId = raftDataSyncVariable.raftNeedCheckQueue.pollFirst();
@@ -218,9 +251,10 @@ public class RaftSummarizer extends IncrementalSummarizer {
         }
     }
 
-
     /**
      * 共识时间对象，该类与 RaftCalculateVariable 中的相关方法绑定密切
+     *
+     * @see RaftDataSyncVariable
      */
     private class ConsensusTime implements Comparable<ConsensusTime> {
         long time;
@@ -238,15 +272,14 @@ public class RaftSummarizer extends IncrementalSummarizer {
 
         @Override
         public String toString() {
-            return "ConsensusTime{" +
-                    "time=" + time +
-                    ", logIndex=" + logIndex +
-                    '}';
+            return "ConsensusTime{" + "time=" + time + ", logIndex=" + logIndex + '}';
         }
     }
 
     /**
      * Raft计算会使用到的相关变量
+     *
+     * @see ConsensusTime
      */
     private class RaftDataSyncVariable {
         /**
@@ -358,5 +391,134 @@ public class RaftSummarizer extends IncrementalSummarizer {
             consensusTimes.add(new ConsensusTime(simulator.getTime(), newConsensusLogIndex));
         }
 
+    }
+
+    /**
+     * 该变量包括对选举状态的记录：选举是否成功、选举任期、触发时间。
+     * <p>
+     * 这里的触发时间需要作说明，我们先列出以下三个时刻：
+     * <pre>
+     * 1· Follower 成为 Candidate     是时刻A
+     * 2· Candidate 接受到过半选票     是时刻B
+     * 3· 时刻A设置的最大选举时间到了    是时刻C
+     * </pre>
+     * 这里的触发时间指的是<u>时刻C</u>，而非时刻B。
+     */
+    private class ElectionStatus {
+        boolean isSuccess;
+        int term;
+        /**
+         * 需要注意的是这里的触发时间如果要被改变也是有条件的：详细请参考 RaftElectVariable
+         *
+         * @see RaftElectVariable
+         */
+        long time;
+
+        /**
+         * @param isSuccess 选举是否成功
+         * @param term      选举对应是第几任期
+         * @param time      该任期的触发时间
+         */
+        public ElectionStatus(boolean isSuccess, int term, long time) {
+            this.isSuccess = isSuccess;
+            this.term = term;
+            this.time = time;
+        }
+
+        /**
+         * @return 返回当前任期记录的选举状态
+         */
+        public boolean isSuccess() {
+            return isSuccess;
+        }
+
+        /**
+         * @param success 当前任期的成功状态是否发生了变化
+         */
+        public void setSuccess(boolean success) {
+            isSuccess = success;
+        }
+
+        /**
+         * @param newTime 需要被设置的新的时间
+         */
+        public void setTime(long newTime) {
+            this.time = newTime;
+        }
+
+        @Override
+        public String toString() {
+            return "ElectionStatus{" +
+                    "isSuccess=" + isSuccess +
+                    ", term=" + term +
+                    ", time=" + time +
+                    '}';
+        }
+    }
+
+    /**
+     * 该变量主要用来统计：Raft选举的成功和失败
+     *
+     * @see ElectionStatus
+     */
+    private class RaftElectVariable {
+        /**
+         * Raft节点个数
+         */
+        int raftNodes;
+
+        /**
+         * 记录的选举结果个数
+         */
+        int n;
+
+        /**
+         * 记录的选举的 状态信息
+         */
+        ArrayList<ElectionStatus> electionStatuses;
+
+
+        public RaftElectVariable(int raftNodes) {
+            this.raftNodes = raftNodes;
+            electionStatuses = new ArrayList<>(60);
+            electionStatuses.add(new ElectionStatus(true, 0, 0));
+            n = 0;
+        }
+
+        /**
+         * 选举信息的结束回调，
+         * 理论上讲，只要整个Raft系统完全正常工作，
+         * 那么就不会出现 term 从 7 直接跨越到 9 的情况
+         * <p>
+         * 虽然term的取值在每个节点初始化的时候是0，但他们的选举的term，必定是从1开始。
+         * 又因为其不会出现term的跨越，所以我们进行一个小设置：
+         * <p>
+         * 数组下标 == term
+         *
+         * @param term    参选者的term
+         * @param moteId  参选者的节点id
+         * @param success 参选者本次参选是否成功
+         */
+        public void addElection(int term, int moteId, boolean success) {
+            if (term < 0 || term > n + 1) {
+                new IndexOutOfBoundsException("term 是非法的term，不符合Raft正常运行逻辑").printStackTrace();
+                return;
+            }
+            if (term == n + 1) {
+                //如果是一个新的选举状态，我们需要按照这种方式进行添加
+                electionStatuses.add(new ElectionStatus(success, term, simulator.getTime()));
+                n++;
+            } else {
+                //如果是一个旧的选举状态 首先我们 false -> true 是一个单向的变化过程
+                ElectionStatus electionStatus = electionStatuses.get(term);
+                if (electionStatus.isSuccess()) {
+                    //如果当前是一个true 状态，不会发生改变
+                    return;
+                }
+                //如果当前是false状态 我们会尝试进行改变：刷新选举状态记录时间 和 选举状态本身
+                electionStatus.setTime(simulator.getTime());
+                electionStatus.setSuccess(success);
+            }
+        }
     }
 }

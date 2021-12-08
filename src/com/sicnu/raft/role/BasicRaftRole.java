@@ -1,6 +1,8 @@
 package com.sicnu.raft.role;
 
+import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
+import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.raft.RaftUtils;
 import com.sicnu.netsimu.annotation.NotNull;
@@ -109,14 +111,9 @@ public class BasicRaftRole extends RaftRole {
         raftSender.broadCast(new ElectionRPC(RPC.RPC_ELECT, constantVariable.currentTerm, mote.getMoteId(),
                 raftLogTable.getLastLogIndex(), raftLogTable.getLastLogTerm()));
         // 设置一个选举动作的触发时间
-        mote.setTimeout(new TimeoutEvent(MAX_CANDIDATE_HOLD_ON_SPAN_TIME, false,
-                mote.getSimulator(), mote) {
-            @Override
-            public void work() {
-                // 选举超时结束动作
-                candidateVariable.candidateElectionEnding();
-            }
-        });
+        ElectionTimeoutEvent electionTimeoutEvent = new ElectionTimeoutEvent(MAX_CANDIDATE_HOLD_ON_SPAN_TIME,
+                false, mote.getSimulator(), mote, constantVariable.currentTerm);
+        mote.setTimeout(electionTimeoutEvent);
     }
 
     /**
@@ -768,5 +765,45 @@ public class BasicRaftRole extends RaftRole {
             return currentLeaderId != 0;
         }
 
+    }
+
+    /**
+     * 选举事件，不再是匿名类，
+     * <p>
+     * 在该事件结束后，我们会对Leader的状态进行判定，判定是否有流局现象。
+     */
+    public class ElectionTimeoutEvent extends TimeoutEvent {
+        /**
+         * 当前正在竞选的term，
+         * 该变量主要是交给RaftSummarizer在统计选举成功和失败信息的时候使用
+         *
+         * @see com.sicnu.raft.ui.RaftCalculateInPreEventInterceptor
+         * @see com.sicnu.raft.ui.RaftSummarizer
+         */
+        int term;
+
+        /**
+         * @param spanTime  延时间隔
+         * @param isLoop    是否循环
+         * @param simulator 模拟器引用
+         * @param selfMote  调用setTimeout的节点引用
+         */
+        public ElectionTimeoutEvent(long spanTime, boolean isLoop, NetSimulator simulator, Mote selfMote, int term) {
+            super(spanTime, isLoop, simulator, selfMote);
+            this.term = term;
+        }
+
+        /**
+         * 每个事件都有自己的专属方法。
+         */
+        @Override
+        public void work() {
+            // 选举超时结束动作
+            candidateVariable.candidateElectionEnding();
+        }
+
+        public int getTerm() {
+            return term;
+        }
     }
 }

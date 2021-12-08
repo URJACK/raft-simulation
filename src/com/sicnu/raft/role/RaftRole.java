@@ -96,4 +96,15 @@ public abstract class RaftRole {
      * @see RaftLogTable
      */
     public abstract RaftLogTable getLogTable();
+
+    /**
+     * 获取当前节点的角色信息
+     * RaftRole -> RaftMote -> ...
+     *
+     * @return 当前节点的角色
+     * @see RaftMote
+     */
+    public int getRole() {
+        return role;
+    }
 }

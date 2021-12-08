@@ -11,13 +11,15 @@ import java.util.Random;
 public class NetSimulationRandom {
 
     static Random random;
+    static Long netRandomSeed = null;
 
-    {
+    static {
         random = new Random();
     }
 
-    public static void setRandomSeed(long seed) {
-        random = new Random(seed);
+    public static void setNetRandomSeed(long seed) {
+        netRandomSeed = seed;
+        random = new Random(netRandomSeed);
     }
 
     public static int nextInt(int bound) {
@@ -30,5 +32,9 @@ public class NetSimulationRandom {
 
     public static double nextDouble() {
         return random.nextDouble();
+    }
+
+    public static Long getNetRandomSeed() {
+        return netRandomSeed;
     }
 }
