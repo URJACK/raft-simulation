@@ -16,7 +16,6 @@ import lombok.Data;
  * 1200, RAFT_OP, 1, add, name, hello
  * </pre>
  *
- * @see RaftOpCommand
  * @see RaftMote
  * @see RaftRole
  */

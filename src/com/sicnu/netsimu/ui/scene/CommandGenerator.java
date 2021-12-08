@@ -57,10 +57,17 @@ public abstract class CommandGenerator {
      *  addCommandGenerator(new CommandGenerator.NodeAddCommandGenerator(linearConfig.time, i + idOffset,
      *  x, y, linearConfig.nodeClass, linearConfig.args));
      * </pre>
+     * 生成命令如下：
+     * <pre>
+     * 1000, NODE_ADD, 1, 50, 100, com.sicnu.netsimu.core.mote.NormalMote
+     * 1000, NODE_ADD, 3, 100, 100, com.sicnu.raft.mote.RaftMote , 3
+     * </pre>
      */
     public static class NodeAddCommandGenerator extends CommandGenerator {
         @AutoConvert
         private long time;
+        @AutoConvert
+        private String commandType;
         @AutoConvert
         private int moteId;
         @AutoConvert
@@ -74,6 +81,7 @@ public abstract class CommandGenerator {
 
         public NodeAddCommandGenerator(long time, int moteId, float x, float y, Class nodeClass, String[] params) {
             this.time = time;
+            commandType = "NODE_ADD";
             this.moteId = moteId;
             this.x = x;
             this.y = y;

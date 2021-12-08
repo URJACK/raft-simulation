@@ -150,4 +150,15 @@ public class RaftMote extends Mote {
     public int getRole() {
         return raftRole.getRole();
     }
+
+    /**
+     * RaftMote发送心跳包
+     * 发送心跳包的函数是RaftRole进行编写的。
+     *
+     * @see RaftRole
+     */
+    public void sendHeartBeats() {
+        //节点角色发送心跳包
+        raftRole.TIMER_BEATS();
+    }
 }

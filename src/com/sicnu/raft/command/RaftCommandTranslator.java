@@ -29,10 +29,12 @@ public class RaftCommandTranslator extends CommandTranslator {
         extendsCommandTypeHashset.add("RAFT_ELECT");
         extendsCommandTypeHashset.add("RAFT_BEATS");
         extendsCommandTypeHashset.add("RAFT_OP");
+        extendsCommandTypeHashset.add("RAFT_LEADER_OP");
         //指令长度集合
         extendsCommandLengthHashMap.put("RAFT_ELECT", 3);
         extendsCommandLengthHashMap.put("RAFT_BEATS", 3);
         extendsCommandLengthHashMap.put("RAFT_OP", 6);
+        extendsCommandLengthHashMap.put("RAFT_LEADER_OP", 5);
     }
 
     /**
@@ -67,6 +69,8 @@ public class RaftCommandTranslator extends CommandTranslator {
                         // 生成控制台展示接口
                         new RaftOpCommand(simulator, timeStamp, commandType, Integer.parseInt(commandStrings[2]),
                                 commandStrings[3], commandStrings[4], commandStrings[5]);
+                case "RAFT_LEADER_OP" -> new RaftLeaderOpCommand(simulator, timeStamp, commandType,
+                        commandStrings[2], commandStrings[3], commandStrings[4]);
                 default -> throw new CommandParseException("No Matched Type");
             };
         }

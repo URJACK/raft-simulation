@@ -5,7 +5,11 @@ import com.sicnu.netsimu.core.command.Command;
 import lombok.Data;
 
 /**
- * Raft选举命令
+ * Raft选举命令，它应当能够触发对应Raft节点的选举命令
+ * <pre>
+ * 1000, RAFT_ELECT, 3
+ * </pre>
+ * 该类目前没有做具体实现
  */
 @Data
 public class RaftElectCommand extends Command {
@@ -18,7 +22,7 @@ public class RaftElectCommand extends Command {
      * @param nodeId    节点id
      */
     public RaftElectCommand(NetSimulator simulator, long timeStamp, String type, int nodeId) {
-        super(simulator,timeStamp, type);
+        super(simulator, timeStamp, type);
         this.nodeId = nodeId;
     }
 
