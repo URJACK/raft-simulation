@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * 基础Raft算法实现
  */
-public class BasicRaftRole extends RaftRole {
+public class BasicRaftRoleLogic extends RaftRoleLogic {
 
     /**
      * Raft数据包的发送者
@@ -64,7 +64,7 @@ public class BasicRaftRole extends RaftRole {
      *
      * @param nodeNum Raft节点个数
      */
-    public BasicRaftRole(RaftMote mote, int nodeNum) {
+    public BasicRaftRoleLogic(RaftMote mote, int nodeNum) {
         super(mote, nodeNum);
         // 设定节点为跟随者
         role = ROLE_FOLLOWER;
@@ -181,7 +181,7 @@ public class BasicRaftRole extends RaftRole {
      * @param value         操作值
      * @see RaftOpCommand
      * @see RaftMote
-     * @see RaftRole
+     * @see RaftRoleLogic
      */
     @Override
     public void logOperate(String operationType, String key, String value) {

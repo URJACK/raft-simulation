@@ -3,7 +3,7 @@ package com.sicnu.raft.command;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.command.Command;
 import com.sicnu.raft.mote.RaftMote;
-import com.sicnu.raft.role.RaftRole;
+import com.sicnu.raft.role.RaftRoleLogic;
 import lombok.Data;
 
 /**
@@ -17,7 +17,7 @@ import lombok.Data;
  * </pre>
  *
  * @see RaftMote
- * @see RaftRole
+ * @see RaftRoleLogic
  */
 @Data
 public class RaftOpCommand extends Command {

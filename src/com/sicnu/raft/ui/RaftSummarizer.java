@@ -15,8 +15,8 @@ import java.util.*;
 import com.sicnu.netsimu.core.net.TransmissionManager;
 import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.raft.mote.RaftMote;
-import com.sicnu.raft.role.BasicRaftRole;
-import com.sicnu.raft.role.RaftRole;
+import com.sicnu.raft.role.BasicRaftRoleLogic;
+import com.sicnu.raft.role.RaftRoleLogic;
 import com.sicnu.raft.role.log.RaftLogTable;
 
 /**
@@ -75,7 +75,7 @@ public class RaftSummarizer extends IncrementalSummarizer {
      * <p>
      * 主要在 preInterceptor 中使用，主要与ElectionTimeoutEvent有关。
      *
-     * @see BasicRaftRole.ElectionTimeoutEvent
+     * @see BasicRaftRoleLogic.ElectionTimeoutEvent
      */
     RaftElectVariable raftElectVariable;
 
@@ -182,14 +182,14 @@ public class RaftSummarizer extends IncrementalSummarizer {
                 int moteId = receiver.getMoteId();
                 raftDataSyncVariable.raftNeedCheckQueue.addLast(moteId);
             }
-        } else if (peekEvent instanceof BasicRaftRole.ElectionTimeoutEvent) {
+        } else if (peekEvent instanceof BasicRaftRoleLogic.ElectionTimeoutEvent) {
             //如果是一个选举事件 我们在其开始之前就进行处理
-            BasicRaftRole.ElectionTimeoutEvent event = (BasicRaftRole.ElectionTimeoutEvent) peekEvent;
+            BasicRaftRoleLogic.ElectionTimeoutEvent event = (BasicRaftRoleLogic.ElectionTimeoutEvent) peekEvent;
             //我们获取到选举事件对应的节点
             RaftMote raftMote = (RaftMote) event.getSelfMote();
             //我们对该节点
             int candidateRole = raftMote.getRole();
-            if (candidateRole != RaftRole.ROLE_LEADER) {
+            if (candidateRole != RaftRoleLogic.ROLE_LEADER) {
                 //如果节点在选举结束的时候，仍未成为LEADER，就说明该次选举失败了
                 raftElectVariable.addElection(event.getTerm(), raftMote.getMoteId(), false);
             } else {

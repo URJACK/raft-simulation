@@ -9,9 +9,8 @@ import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.exception.ParseException;
-import com.sicnu.raft.role.BasicRaftRole;
-import com.sicnu.raft.role.RaftRole;
-import com.sicnu.raft.RaftUtils;
+import com.sicnu.raft.role.BasicRaftRoleLogic;
+import com.sicnu.raft.role.RaftRoleLogic;
 import com.sicnu.raft.role.log.RaftLogTable;
 
 import java.util.List;
@@ -31,7 +30,7 @@ public class RaftMote extends Mote {
     public static final String MAC_PREFIX = "EE:EE:EE:EE:EE:";
     public static final int RAFT_PORT = 3000;
     private int NODE_NUM = 0;
-    RaftRole raftRole;
+    RaftRoleLogic raftRoleLogic;
     /**
      * 触发选举操作的检查时间
      * 触发该时间后，未必就会进行选举，它会调用role去检查是否可以进行选举。
@@ -47,13 +46,13 @@ public class RaftMote extends Mote {
      * @param x         节点x坐标
      * @param y         节点y坐标
      */
-    public RaftMote(NetSimulator simulator, int moteId, float x, float y, String... args) {
-        super(simulator, moteId, x, y, RaftMote.class);
+    public RaftMote(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
+        super(simulator, moteId, x, y, moteClass);
         //监听ip地址 合成每个节点的专属Ip地址
         String selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
         //Raft节点记录下的NODE_NUM数
         NODE_NUM = Integer.parseInt(args[0]);
-        raftRole = new BasicRaftRole(this, NODE_NUM);
+        raftRoleLogic = new BasicRaftRoleLogic(this, NODE_NUM);
         equipNetStack(selfMacAddress);
     }
 
@@ -68,9 +67,9 @@ public class RaftMote extends Mote {
             @Override
             public void work() {
                 // 尝试进行选举动作
-                raftRole.TIMER_ELECT();
+                raftRoleLogic.TIMER_ELECT();
                 // 尝试发送心跳包
-                raftRole.TIMER_BEATS();
+                raftRoleLogic.TIMER_BEATS();
             }
         });
     }
@@ -107,7 +106,7 @@ public class RaftMote extends Mote {
     public void netReceive(String packet) {
         List<NetField> netFields = netStack.parse(packet);
         if (netFields != null) {
-            raftRole.handlePacket(netFields);
+            raftRoleLogic.handlePacket(netFields);
         }
     }
 
@@ -122,10 +121,10 @@ public class RaftMote extends Mote {
      * @param value         操作值
      * @see RaftOpCommand
      * @see RaftMote
-     * @see RaftRole
+     * @see RaftRoleLogic
      */
     public void logOperate(String operationType, String key, String value) {
-        raftRole.logOperate(operationType, key, value);
+        raftRoleLogic.logOperate(operationType, key, value);
     }
 
     /**
@@ -133,10 +132,10 @@ public class RaftMote extends Mote {
      *
      * @return 日志表引用
      * @see RaftLogTable
-     * @see RaftRole
+     * @see RaftRoleLogic
      */
     public RaftLogTable getLogTable() {
-        return raftRole.getLogTable();
+        return raftRoleLogic.getLogTable();
     }
 
     /**
@@ -145,20 +144,20 @@ public class RaftMote extends Mote {
      * 因为角色信息没有存储在RaftMote这个类中，而是存储在RaftRole中，
      * 所以我们这里要通过RaftRole对角色信息进行返还
      *
-     * @see RaftRole
+     * @see RaftRoleLogic
      */
     public int getRole() {
-        return raftRole.getRole();
+        return raftRoleLogic.getRole();
     }
 
     /**
      * RaftMote发送心跳包
      * 发送心跳包的函数是RaftRole进行编写的。
      *
-     * @see RaftRole
+     * @see RaftRoleLogic
      */
     public void sendHeartBeats() {
         //节点角色发送心跳包
-        raftRole.TIMER_BEATS();
+        raftRoleLogic.TIMER_BEATS();
     }
 }

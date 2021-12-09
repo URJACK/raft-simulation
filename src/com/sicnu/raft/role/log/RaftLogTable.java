@@ -1,6 +1,7 @@
 package com.sicnu.raft.role.log;
 
 import com.sicnu.netsimu.exception.ParseException;
+import com.sicnu.raft.role.RaftRoleLogic;
 
 import java.util.ArrayList;
 
@@ -149,7 +150,7 @@ public class RaftLogTable {
      * </pre>
      * 可能会被RaftRole进行调用
      *
-     * @see com.sicnu.raft.role.RaftRole
+     * @see RaftRoleLogic
      */
     public void clear() {
         this.n = 0;
@@ -185,7 +186,7 @@ public class RaftLogTable {
      * 因为0号日志是占位日志。
      *
      * @param deleteIndex 删除的日志下标
-     * @see com.sicnu.raft.role.RaftRole
+     * @see RaftRoleLogic
      */
     public void deleteAt(int deleteIndex) {
         if (deleteIndex > 0 && deleteIndex <= n) {

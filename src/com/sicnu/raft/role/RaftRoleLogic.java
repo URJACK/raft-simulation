@@ -11,7 +11,7 @@ import java.util.List;
  * Raft角色
  * 所有的Raft核心代码都在该类及实现类中进行编写
  */
-public abstract class RaftRole {
+public abstract class RaftRoleLogic {
     /**
      * Raft节点引用
      */
@@ -48,7 +48,7 @@ public abstract class RaftRole {
      * @param mote    所属的节点引用
      * @param nodeNum Raft节点个数
      */
-    public RaftRole(RaftMote mote, int nodeNum) {
+    public RaftRoleLogic(RaftMote mote, int nodeNum) {
         this.mote = mote;
         this.NODE_NUM = nodeNum;
     }
@@ -85,7 +85,7 @@ public abstract class RaftRole {
      * @param value         操作值
      * @see RaftOpCommand
      * @see RaftMote
-     * @see RaftRole
+     * @see RaftRoleLogic
      */
     public abstract void logOperate(String operationType, String key, String value);
 

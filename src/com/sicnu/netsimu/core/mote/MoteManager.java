@@ -59,7 +59,7 @@ public class MoteManager {
             Constructor[] declaredConstructors = nodeClass.getDeclaredConstructors();
             for (Constructor constructor : declaredConstructors) {
 //                System.out.println(constructor.getName());
-                Mote mote = (Mote) constructor.newInstance(simulator, nodeId, x, y, args);
+                Mote mote = (Mote) constructor.newInstance(simulator, nodeId, x, y, nodeClass, args);
 //                NormalMote mote = new NormalMote(simulator, nodeId, x, y);
                 motes.add(mote);
                 moteRecorder.put(nodeId, mote);

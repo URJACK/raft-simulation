@@ -2,8 +2,7 @@ package com.sicnu.raft.ui;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.*;
-import com.sicnu.netsimu.ui.summary.Summarizer;
-import com.sicnu.raft.role.BasicRaftRole;
+import com.sicnu.raft.role.BasicRaftRoleLogic;
 
 /**
  * Raft相关指标计算类之一
@@ -21,7 +20,7 @@ public class RaftCalculateInPreEventInterceptor extends EventInterceptor {
 
     @Override
     public void work(Event event) {
-        if (event instanceof TransmissionEvent || event instanceof CommandEvent || event instanceof BasicRaftRole.ElectionTimeoutEvent) {
+        if (event instanceof TransmissionEvent || event instanceof CommandEvent || event instanceof BasicRaftRoleLogic.ElectionTimeoutEvent) {
             // 如果是传输事件、或者是外部命令，才有可能导致 Raft的日志 发生变化
             summarizer.summarize(RaftSummarizer.RAFT_PRE);
         }

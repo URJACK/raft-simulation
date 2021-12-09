@@ -4,7 +4,7 @@ import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.command.Command;
 import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.raft.mote.RaftMote;
-import com.sicnu.raft.role.RaftRole;
+import com.sicnu.raft.role.RaftRoleLogic;
 import lombok.Data;
 
 /**
@@ -22,7 +22,7 @@ import lombok.Data;
  * </pre>
  *
  * @see RaftMote
- * @see RaftRole
+ * @see RaftRoleLogic
  */
 @Data
 public class RaftLeaderOpCommand extends Command {
@@ -53,7 +53,7 @@ public class RaftLeaderOpCommand extends Command {
                 continue;
             }
             RaftMote raftMote = (RaftMote) mote;
-            if (raftMote.getRole() != RaftRole.ROLE_LEADER) {
+            if (raftMote.getRole() != RaftRoleLogic.ROLE_LEADER) {
                 continue;
             }
             // 所有的Leader都会执行该操作
