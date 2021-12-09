@@ -2,7 +2,7 @@ package com.sicnu.raft.role.rpc;
 
 import com.sicnu.netsimu.annotation.AllowNull;
 import com.sicnu.netsimu.exception.ParseException;
-import com.sicnu.raft.role.log.RaftLogItem;
+import com.sicnu.raft.log.RaftLogItem;
 import lombok.Data;
 
 /**

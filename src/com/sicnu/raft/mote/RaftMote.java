@@ -11,19 +11,17 @@ import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.exception.ParseException;
 import com.sicnu.raft.role.BasicRaftRoleLogic;
 import com.sicnu.raft.role.RaftRoleLogic;
-import com.sicnu.raft.role.log.RaftLogTable;
+import com.sicnu.raft.log.RaftLogTable;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 /**
- * Raft节点 的protected方法名
- * containPort
- * containAddress
- * listenPort
- * listenIp
- * print
- * setTimeout
- * call
+ * 构建节点的Command如下：
+ * <pre>
+ * 1000, NODE_ADD, 3, 250, 100, com.sicnu.raft.mote.RaftMote, 3, com.sicnu.raft.role.BasicRaftRoleLogic
+ * </pre>
  */
 public class RaftMote extends Mote {
     public static final String IP_PREFIX = "192.168.0.";
@@ -52,7 +50,14 @@ public class RaftMote extends Mote {
         String selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
         //Raft节点记录下的NODE_NUM数
         NODE_NUM = Integer.parseInt(args[0]);
-        raftRoleLogic = new BasicRaftRoleLogic(this, NODE_NUM);
+        String rolePath = args[1];
+        try {
+            Class<?> roleClazz = Class.forName(rolePath);
+            Constructor<?> constructor = roleClazz.getDeclaredConstructor(RaftMote.class, int.class);
+            raftRoleLogic = (RaftRoleLogic) constructor.newInstance(this, NODE_NUM);
+        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
         equipNetStack(selfMacAddress);
     }
 

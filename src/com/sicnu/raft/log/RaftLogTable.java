@@ -1,4 +1,4 @@
-package com.sicnu.raft.role.log;
+package com.sicnu.raft.log;
 
 import com.sicnu.netsimu.exception.ParseException;
 import com.sicnu.raft.role.RaftRoleLogic;

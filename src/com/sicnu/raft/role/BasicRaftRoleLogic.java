@@ -10,8 +10,8 @@ import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.exception.ParameterException;
 import com.sicnu.netsimu.exception.RaftRuntimeException;
 import com.sicnu.raft.mote.RaftMote;
-import com.sicnu.raft.role.log.RaftLogItem;
-import com.sicnu.raft.role.log.RaftLogTable;
+import com.sicnu.raft.log.RaftLogItem;
+import com.sicnu.raft.log.RaftLogTable;
 import com.sicnu.raft.role.rpc.*;
 
 import java.util.List;
@@ -24,23 +24,23 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
     /**
      * Raft数据包的发送者
      */
-    RaftSender raftSender;
+    protected RaftSender raftSender;
     /**
      * RaftTable raft操作表
      */
-    RaftLogTable raftLogTable;
+    protected RaftLogTable raftLogTable;
     /**
      * Leader 使用的属性
      */
-    LeaderVariable leaderVariable;
+    protected LeaderVariable leaderVariable;
     /**
      * 恒定使用属性
      */
-    ConstantVariable constantVariable;
+    protected ConstantVariable constantVariable;
     /**
      * 候选人使用属性
      */
-    CandidateVariable candidateVariable;
+    protected CandidateVariable candidateVariable;
 
     /**
      * 最大超时选举时间

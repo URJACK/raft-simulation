@@ -3,7 +3,7 @@ package com.sicnu.raft.role;
 import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.raft.mote.RaftMote;
-import com.sicnu.raft.role.log.RaftLogTable;
+import com.sicnu.raft.log.RaftLogTable;
 
 import java.util.List;
 

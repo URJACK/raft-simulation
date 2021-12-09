@@ -17,7 +17,7 @@ import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.raft.mote.RaftMote;
 import com.sicnu.raft.role.BasicRaftRoleLogic;
 import com.sicnu.raft.role.RaftRoleLogic;
-import com.sicnu.raft.role.log.RaftLogTable;
+import com.sicnu.raft.log.RaftLogTable;
 
 /**
  * 本总结器，可以总结以下几个类别的属性：

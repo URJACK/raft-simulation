@@ -1,4 +1,4 @@
-package com.sicnu.raft.role.log;
+package com.sicnu.raft.log;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
