@@ -596,19 +596,18 @@ public class BasicRaftRole extends RaftRole {
          */
         public void candidateElectionEnding() {
             switch (role) {
-                case ROLE_CANDIDATE:
+                case ROLE_CANDIDATE -> {
                     this.clearVoteAndActionTime();
                     role = ROLE_FOLLOWER;
                     mote.print("选票不够，选举失败");
-                    break;
-                case ROLE_LEADER:
-                    mote.print("已经选举成功");
-                    break;
-                case ROLE_FOLLOWER:
+                }
+                case ROLE_LEADER -> mote.print("已经选举成功");
+                case ROLE_FOLLOWER -> {
                     this.clearVoteAndActionTime();
                     mote.print("因为其他Candidate或者Leader，选举失败");
-                    break;
-                default:
+                }
+                default -> {
+                }
             }
         }
 
@@ -722,12 +721,15 @@ public class BasicRaftRole extends RaftRole {
             // 在参选过程中 因为其他原因变为 Follower
             // 需要注意的是 即便在这里不使用 clear 也会最终触发 candidateElectionEnding
             candidateVariable.clearVoteAndActionTime();
+            int senderId = rpc.getSenderId();
             if (rpc instanceof ElectionRPC) {
                 //如果是一个选举请求 自身会把votedFor进行设置
-                int senderId = rpc.getSenderId();
                 constantVariable.votedFor = senderId;
             } else if (rpc instanceof HeartBeatsRPC) {
-                int senderId = rpc.getSenderId();
+                constantVariable.currentLeaderId = senderId;
+            } else if (rpc instanceof ElectionRespRPC) {
+                // 这种情况是，我想要成为Leader，但是对方的term比我更高，所以给予了我拒绝
+                // 自身必须以对方为Leader
                 constantVariable.currentLeaderId = senderId;
             } else {
                 throw new ClassNotFoundException("没有找到合适的类");
