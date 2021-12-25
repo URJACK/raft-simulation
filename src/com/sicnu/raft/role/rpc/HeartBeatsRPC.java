@@ -32,6 +32,10 @@ public class HeartBeatsRPC implements RPCConvert, SenderRPC {
      * 最新日志之前的 term
      */
     int prevTerm;
+    /**
+     * 当前Leader确认的日志Index
+     */
+    int commitIndex;
     //    int hasEntry;
     RaftLogItem logItem;
 
@@ -57,12 +61,13 @@ public class HeartBeatsRPC implements RPCConvert, SenderRPC {
      * @param logItem   心跳包可以传入logItem
      * @see RaftLogItem
      */
-    public HeartBeatsRPC(int type, int term, int leaderId, int prevIndex, int prevTerm, @AllowNull RaftLogItem logItem) {
+    public HeartBeatsRPC(int type, int term, int leaderId, int prevIndex, int prevTerm, int commitIndex, @AllowNull RaftLogItem logItem) {
         this.type = type;
         this.term = term;
         this.leaderId = leaderId;
         this.prevIndex = prevIndex;
         this.prevTerm = prevTerm;
+        this.commitIndex = commitIndex;
         this.logItem = logItem;
     }
 
@@ -81,6 +86,8 @@ public class HeartBeatsRPC implements RPCConvert, SenderRPC {
         sb.append(prevIndex);
         sb.append(",");
         sb.append(prevTerm);
+        sb.append(",");
+        sb.append(commitIndex);
         if (logItem != null) {
             sb.append(",");
             sb.append(logItem.getIndex());
@@ -104,22 +111,23 @@ public class HeartBeatsRPC implements RPCConvert, SenderRPC {
     @Override
     public void parse(String str) {
         String[] splits = str.split(",");
-        if (splits.length == 10 || splits.length == 5) {
+        if (splits.length == 11 || splits.length == 6) {
             //共有部分
             type = Integer.parseInt(splits[0]);
             term = Integer.parseInt(splits[1]);
             leaderId = Integer.parseInt(splits[2]);
             prevIndex = Integer.parseInt(splits[3]);
             prevTerm = Integer.parseInt(splits[4]);
-            if (splits.length == 10) {
+            commitIndex = Integer.parseInt(splits[5]);
+            if (splits.length == 11) {
                 //如果 Heartbeats 有数据部分 logItem
-                int logIndex = Integer.parseInt(splits[5]);
-                int logTerm = Integer.parseInt(splits[6]);
+                int logIndex = Integer.parseInt(splits[6]);
+                int logTerm = Integer.parseInt(splits[7]);
                 logItem = new RaftLogItem(logIndex, logTerm,
-                        splits[7], splits[8], splits[9]);
+                        splits[8], splits[9], splits[10]);
             }
         } else {
-            new ParseException("Parse Exception the elements.length is not 10").printStackTrace();
+            new ParseException("Parse Exception the elements.length is not 11").printStackTrace();
         }
     }
 

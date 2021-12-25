@@ -160,18 +160,6 @@ public class RaftLogTable {
         this.items.add(new RaftLogItem(0, 0, "", "", ""));
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 1; i <= n; i++) {
-            sb.append(items.get(i).toString());
-        }
-        return "RaftLogTable{" +
-                sb.toString() +
-                ", n=" + n +
-                '}';
-    }
-
     /**
      * 删除对应index的Log日志
      * <pre>
@@ -207,5 +195,33 @@ public class RaftLogTable {
      */
     public int getLength() {
         return n;
+    }
+
+    /**
+     * 设置本地记录的commitIndex
+     *
+     * @param commitIndex 确认的日志编号，理论上该数值不会变得更低
+     */
+    public void tryToSetCommitIndex(int commitIndex) {
+        if (commitIndex >= this.commitIndex) {
+            this.commitIndex = commitIndex;
+        }
+    }
+
+    public int getCommitIndex() {
+        return this.commitIndex;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 1; i <= n; i++) {
+            sb.append(items.get(i).toString());
+        }
+        return "RaftLogTable{" +
+                sb.toString() +
+                ", n=" + n +
+                ", commitIndex=" + commitIndex +
+                '}';
     }
 }

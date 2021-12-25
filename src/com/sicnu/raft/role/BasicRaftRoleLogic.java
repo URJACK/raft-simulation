@@ -14,6 +14,8 @@ import com.sicnu.raft.log.RaftLogItem;
 import com.sicnu.raft.log.RaftLogTable;
 import com.sicnu.raft.role.rpc.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -70,6 +72,10 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
         role = ROLE_FOLLOWER;
         raftLogTable = new RaftLogTable();
         raftSender = new RaftSender(mote, NODE_NUM);
+        initVariable(nodeNum);
+    }
+
+    protected void initVariable(int nodeNum) {
         // 设置当前的任期、已经投给的Candidate、当前所属的Leader
         constantVariable = new ConstantVariable();
         // 初始化Leader使用的变量
@@ -225,6 +231,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
              */
             leaderVariable.matchIndexes[followerId] = respRPC.getMatchIndex();
             leaderVariable.nextIndexes[followerId] = respRPC.getMatchIndex() + 1;
+            leaderVariable.leaderReceiveRightHeartBeatsResp(respRPC);
         } else {
             /*
             如果isMatched == 0，
@@ -233,6 +240,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
              */
             if (leaderVariable.nextIndexes[followerId] == 1) {
                 //如果这个时候，它都仍出现了未达成一致
+                //理论上这种情况不会出现
                 new RaftRuntimeException("the nextIndex of " + followerId + " can't be smaller than 1").printStackTrace();
                 return;
             }
@@ -300,6 +308,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                      */
                     raftLogTable.addLog(logItem, beatsRPC.getPrevIndex() + 1);
                 }
+                raftLogTable.tryToSetCommitIndex(beatsRPC.getCommitIndex());
                 // 给予回复
                 HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
                         constantVariable.currentTerm, 1, raftLogTable.getLastLogIndex(), mote.getMoteId());
@@ -437,7 +446,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      * <p>
      * 所以我们这边的下标，就设计成了 <strong>Id == index</strong>
      */
-    class LeaderVariable {
+    protected class LeaderVariable {
         /**
          * Raft节点个数
          */
@@ -455,6 +464,8 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
          */
         int[] voteGranted;
 
+        List<CommitCheckList> matchRecords;
+
         /**
          * @param n Raft节点个数
          */
@@ -463,6 +474,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
             nextIndexes = new int[n + 1];
             matchIndexes = new int[n + 1];
             voteGranted = new int[n + 1];
+            matchRecords = new ArrayList<>();
             clear();
         }
 
@@ -492,11 +504,73 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
 
         /**
          * 检查是否有资格发送HeartBeats包
+         * <p>
+         * called by TIMER_BEATS()
          *
          * @return
          */
         public boolean shouldBeatsCheck() {
             return role == ROLE_LEADER;
+        }
+
+        /**
+         * Leader 接受到来自Follower的 正确的 心跳包响应
+         *
+         * @param respRPC 心跳包响应
+         */
+        private void leaderReceiveRightHeartBeatsResp(HeartBeatsRespRPC respRPC) {
+            int matchIndex = respRPC.getMatchIndex();
+            if (matchIndex <= raftLogTable.getCommitIndex()) {
+                //如果返回的matchIndex已经小于等于了我们的commitIndex
+                //显然本次不在需要对其做任何的操作
+                clearUnNeededCheckList(raftLogTable.getCommitIndex());
+                return;
+            }
+            CommitCheckList suitableCheckList = getSuitableCheckList(matchIndex);
+            boolean hasAchievedConsensus = suitableCheckList.addVisitedAndGetResult(respRPC.getSenderId());
+            if (hasAchievedConsensus) {
+                raftLogTable.tryToSetCommitIndex(suitableCheckList.getCommitIndex());
+            }
+            //尝试清理掉不合适的列表
+            clearUnNeededCheckList(raftLogTable.getCommitIndex());
+        }
+
+        private CommitCheckList getSuitableCheckList(int matchIndex) {
+            //如果返回的matchIndex比我们的commitIndex更大
+            for (int i = 0; i < matchRecords.size(); i++) {
+                CommitCheckList checkList = matchRecords.get(i);
+                int listIndex = checkList.getCommitIndex();
+                if (listIndex == matchIndex) {
+                    //找到了List
+                    return checkList;
+                }
+                if (listIndex > matchIndex) {
+                    break;
+                }
+            }
+            CommitCheckList list = new CommitCheckList(matchIndex);
+            matchRecords.add(list);
+            Collections.sort(matchRecords);
+            return list;
+        }
+
+        /**
+         * 我们会将commitIndex之前的 checkList 全部清除
+         * 调用处应当在接受到“心跳包响应”的时候
+         *
+         * @param commitIndex RaftLogTable中存储的commitIndex
+         */
+        private void clearUnNeededCheckList(int commitIndex) {
+            for (int i = 0; i < matchRecords.size(); i++) {
+                CommitCheckList commitCheckList = matchRecords.get(i);
+                int listIndex = commitCheckList.getCommitIndex();
+                if (listIndex <= commitIndex) {
+                    matchRecords.remove(commitCheckList);
+                    i--;
+                } else {
+                    break;
+                }
+            }
         }
 
         /**
@@ -509,6 +583,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
             int lastLogIndex = raftLogTable.getLastLogIndex();
             int nextIndex = nextIndexes[moteId];
             int matchIndex = matchIndexes[moteId];
+            int commitIndex = Math.min(raftLogTable.getCommitIndex(), matchIndex);
             // 计算 prevIndex 与 prevTerm 这些参数
             int prevIndex = nextIndex - 1;
             RaftLogItem transferLogItem = raftLogTable.getLogByIndex(prevIndex);
@@ -527,7 +602,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                 */
                 HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
                         constantVariable.currentTerm, mote.getMoteId(),
-                        prevIndex, prevTerm, null);
+                        prevIndex, prevTerm, commitIndex, null);
                 raftSender.uniCast(moteId, rpc);
             } else {
                 /*
@@ -547,17 +622,78 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                     RaftLogItem item = raftLogTable.getLogByIndex(nextIndex);
                     HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
                             constantVariable.currentTerm, mote.getMoteId(),
-                            prevIndex, prevTerm, item);
+                            prevIndex, prevTerm, commitIndex, item);
                     raftSender.uniCast(moteId, rpc);
                 } else {
                     // 说明目标与我们的日志已经同步了，无需再传输新的数据
                     HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
                             constantVariable.currentTerm, mote.getMoteId(),
-                            prevIndex, prevTerm, null);
+                            prevIndex, prevTerm, commitIndex, null);
                     raftSender.uniCast(moteId, rpc);
                 }
             }
+        }
 
+        /**
+         * 提交确认列表
+         * <p>
+         * 该类是Leader专用的类，专门用于确认commitIndex的变化
+         * <p>
+         * 该类其实是一个{key, value}逻辑的对象。
+         * commitIndex作为key、visited作为value。
+         * <p>
+         * 每一个commitIndex，都对应了一个记录数组
+         * 如果一个记录数组记录过半，就视为该commitIndex已经达成共识。
+         */
+        class CommitCheckList implements Comparable<CommitCheckList> {
+            int commitIndex;
+            int visitCount;
+            boolean[] visited;
+
+            public CommitCheckList(int commitIndex) {
+                this.commitIndex = commitIndex;
+                this.visited = new boolean[n + 1];
+                this.visitCount = 0;
+            }
+
+            /**
+             * 取得当前List的 key值，也就是所属的commitIndex值
+             *
+             * @return 待commit的commitIndex
+             */
+            public int getCommitIndex() {
+                return commitIndex;
+            }
+
+            /**
+             * 取得当前commitIndex值对应的记录数组
+             *
+             * @return 所属commitIndex值对应的记录数组
+             */
+            public boolean[] getVisited() {
+                return visited;
+            }
+
+            /**
+             * 往记录数组中新增一条记录
+             *
+             * @param senderId 记录的用户id，取值应为(1 ~ n)
+             */
+            public boolean addVisitedAndGetResult(int senderId) {
+                if (!visited[senderId]) {
+                    visited[senderId] = true;
+                    visitCount++;
+                    if (visitCount > n / 2) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public int compareTo(CommitCheckList o) {
+                return this.commitIndex - o.commitIndex;
+            }
         }
     }
 
@@ -565,7 +701,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      * hasGotVote 自己作为Candidate，取得的选票数量
      * candidateActionLimitTime 候选动作终止时间
      */
-    class CandidateVariable {
+    protected class CandidateVariable {
         /**
          * 作为一个Candidate 取得的vote数量
          */
@@ -627,7 +763,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      * currentLeaderId
      * lastActionTime
      */
-    class ConstantVariable {
+    protected class ConstantVariable {
         /**
          * 当前节点的任期 默认从0 开始
          */
@@ -691,7 +827,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
          * @see RaftUtils
          * @see com.sicnu.netsimu.core.NetSimulator
          */
-        private void refreshElectionActionTime() {
+        protected void refreshElectionActionTime() {
             //重新记录下动作时间
             electActionLimitTime = mote.getSimulator().getTime() +
                     RaftUtils.floatValue(MAX_ELECT_SPAN_TIME, MAX_ELECT_SPAN_TIME_FLOAT);
@@ -736,7 +872,6 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
             }
             mote.print("I become the follower ( term is " + term + " , leader is: " + rpc.getSenderId() + " )");
         }
-
 
         /**
          * 是否有权力执行 选举检查
