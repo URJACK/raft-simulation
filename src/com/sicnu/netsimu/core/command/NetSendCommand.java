@@ -53,7 +53,7 @@ public class NetSendCommand extends Command {
         NetStack netStack = mote.getNetStack();
 //        mote.netSend(new TransmissionPacket(srcIp, dstIp, srcPort, dstPort, value));
         try {
-            BasicMACLayer.Header header = new BasicMACLayer.Header(netStack.getInfo("mac"), dstMac);
+            BasicMACLayer.Header header = new BasicMACLayer.Header(netStack.getInfo("mac").toString(), dstMac);
             mote.call("netSend", netStack.convert(value, header));
         } catch (ParseException e) {
             e.printStackTrace();

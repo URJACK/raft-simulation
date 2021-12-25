@@ -26,12 +26,26 @@ public abstract class NetStack {
     public abstract ArrayList<NetField> parse(String packet);
 
     /**
-     * 从网络栈中取得信息
+     * 外部调用接口。从网络栈中取得信息
+     * <pre>
+     * BasicMACLayer.Header header =
+     * new BasicMACLayer.Header(netStack.getInfo("mac"), dstMac);
+     * </pre>
+     * netStack应该做出类似如下的实现：
+     * <pre>
+     *  getInfo(String key) {
+     *      return switch (key) {
+     *          case "mac" -> macLayer.getMacSourceAddress();
+     *          case "ip" -> ipLayer.getIpSourceAddress();
+     *          default -> null;
+     *      };
+     *  }
+     * </pre>
      *
      * @param key 取得信息的键名
      * @return 信息内容
      */
-    public abstract String getInfo(String key);
+    public abstract Object getInfo(String key);
 
     /**
      * 设置网络栈中的信息：mac地址、ip地址
@@ -39,5 +53,5 @@ public abstract class NetStack {
      * @param key   mac、ip地址的键
      * @param value 被设置的值
      */
-    public abstract void setInfo(String key, String value);
+    public abstract void setInfo(String key, Object value);
 }

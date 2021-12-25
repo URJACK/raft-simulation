@@ -109,11 +109,19 @@ public class BasicNetStack extends NetStack {
      * @param value 被设置的值
      */
     @Override
-    public void setInfo(String key, String value) {
+    public void setInfo(String key, Object value) {
         switch (key) {
-            case "mac" -> macLayer.setMacSourceAddress(value);
-            case "ip" -> ipLayer.setIpSourceAddress(value);
+            case "mac" -> macLayer.setMacSourceAddress(String.valueOf(value));
+            case "ip" -> ipLayer.setIpSourceAddress(String.valueOf(value));
             default -> new Exception("Error Init Mote Info with key:" + key).printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+        String a = "1234";
+        Object b = a;
+//        String c = (String) b;
+        String c = b.toString();
+        System.out.println(c);
     }
 }
