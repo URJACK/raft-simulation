@@ -151,7 +151,7 @@ public class TransmissionManager {
      * @param senderMote 发送方节点引用
      * @param packet     需要发送的数据包
      */
-    public void moteSendPacket(Mote senderMote, String packet) {
+    public void moteSendPacket(Mote senderMote, byte[] packet) {
         List<TransmissionManager.Neighbor> neighbors = getNeighbors(senderMote);
         //从传输管理器中 查询该节点的邻居节点
         for (TransmissionManager.Neighbor neighbor : neighbors) {

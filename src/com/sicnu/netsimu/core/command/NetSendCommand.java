@@ -5,6 +5,7 @@ import com.sicnu.netsimu.core.mote.Mote;
 import com.sicnu.netsimu.core.mote.MoteManager;
 import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
+import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.exception.ParseException;
 import lombok.Data;
 
@@ -25,7 +26,7 @@ public class NetSendCommand extends Command {
     int nodeId;
 
     // 发送相关参数
-    String dstMac;
+    byte[] dstMac;
 
     // 操作值类型 指明是ip还是端口
     String value;
@@ -42,7 +43,11 @@ public class NetSendCommand extends Command {
                           String dstMac, String value) {
         super(simulator, timeStamp, type);
         this.nodeId = nodeId;
-        this.dstMac = dstMac;
+        try {
+            this.dstMac = MoteCalculate.convertStrAddressIntoByteAddress(dstMac);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
         this.value = value;
     }
 
@@ -53,8 +58,8 @@ public class NetSendCommand extends Command {
         NetStack netStack = mote.getNetStack();
 //        mote.netSend(new TransmissionPacket(srcIp, dstIp, srcPort, dstPort, value));
         try {
-            BasicMACLayer.Header header = new BasicMACLayer.Header(netStack.getInfo("mac").toString(), dstMac);
-            mote.call("netSend", netStack.convert(value, header));
+            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) netStack.getInfo("mac"), dstMac);
+            mote.call("netSend", (Object) netStack.convert(value, header));
         } catch (ParseException e) {
             e.printStackTrace();
         }

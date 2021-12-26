@@ -10,5 +10,5 @@ package com.sicnu.netsimu.core.net;
  * 应用层的数据字段，也可以理解为是一个NetField
  */
 public interface NetField {
-    String value();
+    byte[] value();
 }

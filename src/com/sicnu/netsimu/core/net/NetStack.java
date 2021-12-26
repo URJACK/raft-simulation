@@ -1,5 +1,7 @@
 package com.sicnu.netsimu.core.net;
 
+import com.sicnu.netsimu.exception.ParseException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +17,7 @@ public abstract class NetStack {
      * @param args  Header与传输的数据
      * @return 可传输字符串
      */
-    public abstract String convert(String value, NetField... args);
+    public abstract byte[] convert(Object value, NetField... args);
 
     /**
      * 通过网络栈检查自己是否可以接收该数据包
@@ -23,7 +25,7 @@ public abstract class NetStack {
      * @param packet 传输来的数据包
      * @return null==无法接收该数据包
      */
-    public abstract ArrayList<NetField> parse(String packet);
+    public abstract ArrayList<NetField> parse(byte[] packet);
 
     /**
      * 外部调用接口。从网络栈中取得信息
@@ -53,5 +55,5 @@ public abstract class NetStack {
      * @param key   mac、ip地址的键
      * @param value 被设置的值
      */
-    public abstract void setInfo(String key, Object value);
+    public abstract void setInfo(String key, Object value) throws ParseException;
 }

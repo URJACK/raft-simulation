@@ -8,7 +8,7 @@ public class BasicIPLayer extends NetLayer {
     /**
      * 存储的Ip层的网络地址
      */
-    String ipAddress;
+    byte[] ipAddress;
 
     /**
      * 网络栈将传入的若干参数包装成字符串
@@ -17,7 +17,7 @@ public class BasicIPLayer extends NetLayer {
      * @return 包装成的字符串。
      */
     @Override
-    public String convert(NetField arg) throws Exception {
+    public byte[] convert(NetField arg) throws Exception {
         return null;
     }
 
@@ -29,7 +29,7 @@ public class BasicIPLayer extends NetLayer {
      * @throws ParseException 解析异常
      */
     @Override
-    public NetField parse(String str) throws ParseException {
+    public NetField parse(byte[] packet) throws ParseException {
         return null;
     }
 
@@ -41,8 +41,13 @@ public class BasicIPLayer extends NetLayer {
      * @return
      */
     @Override
-    public boolean validate(String headerStr) {
+    public boolean validate(byte[] head) {
         return false;
+    }
+
+    @Override
+    public int getHeaderLength() {
+        return 0;
     }
 
     /**
@@ -50,7 +55,7 @@ public class BasicIPLayer extends NetLayer {
      *
      * @param value Ip层，网络地址的值
      */
-    public void setIpSourceAddress(String value) {
+    public void setIpSourceAddress(byte[] value) {
         ipAddress = value;
     }
 
@@ -59,7 +64,7 @@ public class BasicIPLayer extends NetLayer {
      *
      * @return Ip层的网络地址
      */
-    public String getIpSourceAddress() {
+    public byte[] getIpSourceAddress() {
         return ipAddress;
     }
 }

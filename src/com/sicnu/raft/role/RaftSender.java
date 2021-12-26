@@ -35,18 +35,11 @@ public class RaftSender {
      * @param rpc 实现了RPC对象转换接口的对象
      */
     public void broadCast(RPCConvert rpc) {
-        for (int i = 0; i < NODE_NUM; i++) {
-            if (mote.getMoteId() - 1 == i) {
-                //不会发给自己
-                continue;
-            }
-        }
-
         NetStack stack = mote.getNetStack();
-        String dstMac = BasicMACLayer.BROAD_CAST;
+        byte[] dstMac = BasicMACLayer.BROAD_CAST;
         try {
-            BasicMACLayer.Header header = new BasicMACLayer.Header(stack.getInfo("mac").toString(), dstMac);
-            String packet = stack.convert(rpc.convert(), header);
+            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) stack.getInfo("mac"), dstMac);
+            byte[] packet = stack.convert(rpc.convert(), header);
             mote.netSend(packet);
         } catch (ParseException e) {
             e.printStackTrace();
@@ -61,10 +54,10 @@ public class RaftSender {
      */
     public void uniCast(int desMoteId, RPCConvert rpc) {
         NetStack stack = mote.getNetStack();
-        String dstMac = MoteCalculate.convertMACAddressWithMoteId(RaftMote.MAC_PREFIX, desMoteId);
         try {
-            BasicMACLayer.Header header = new BasicMACLayer.Header(stack.getInfo("mac").toString(), dstMac);
-            String packet = stack.convert(rpc.convert(), header);
+            byte[] dstMac = MoteCalculate.convertMACAddressWithMoteId(RaftMote.MAC_PREFIX, desMoteId);
+            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) stack.getInfo("mac"), dstMac);
+            byte[] packet = stack.convert(rpc.convert(), header);
             mote.netSend(packet);
         } catch (ParseException e) {
             e.printStackTrace();

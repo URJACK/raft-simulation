@@ -24,10 +24,11 @@ import java.util.List;
  * </pre>
  */
 public class RaftMote extends Mote {
-    public static final String IP_PREFIX = "192.168.0.";
-    public static final String MAC_PREFIX = "EE:EE:EE:EE:EE:";
+    //    public static final String IP_PREFIX = "192.168.0.";
+//    public static final String MAC_PREFIX = "EE:EE:EE:EE:EE:";
+    public static final byte[] MAC_PREFIX = {(byte) 0xEE, (byte) 0xEE,
+            (byte) 0xEE, (byte) 0xEE, (byte) 0xEE};
     public static final int RAFT_PORT = 3000;
-    private int NODE_NUM = 0;
     RaftRoleLogic raftRoleLogic;
     /**
      * 触发选举操作的检查时间
@@ -46,19 +47,19 @@ public class RaftMote extends Mote {
      */
     public RaftMote(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
         super(simulator, moteId, x, y, moteClass);
-        //监听ip地址 合成每个节点的专属Ip地址
-        String selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
-        //Raft节点记录下的NODE_NUM数
-        NODE_NUM = Integer.parseInt(args[0]);
-        String rolePath = args[1];
         try {
+            //Raft节点记录下的NODE_NUM数
+            int NODE_NUM = Integer.parseInt(args[0]);
+            //监听ip地址 合成每个节点的专属Ip地址
+            byte[] selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
+            String rolePath = args[1];
             Class<?> roleClazz = Class.forName(rolePath);
             Constructor<?> constructor = roleClazz.getDeclaredConstructor(RaftMote.class, int.class);
             raftRoleLogic = (RaftRoleLogic) constructor.newInstance(this, NODE_NUM);
-        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            equipNetStack((Object) selfMacAddress);
+        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException | ParseException e) {
             e.printStackTrace();
         }
-        equipNetStack(selfMacAddress);
     }
 
     /**
@@ -93,9 +94,9 @@ public class RaftMote extends Mote {
      */
     @Override
     public void equipNetStack(Object... args) {
-        String macAddress;
-        if (args[0] instanceof String) {
-            macAddress = (String) args[0];
+        byte[] macAddress;
+        if (args[0] instanceof byte[]) {
+            macAddress = (byte[]) args[0];
         } else {
             new ParseException("NetStack init error, no suitable macAddress").printStackTrace();
             return;
@@ -108,7 +109,7 @@ public class RaftMote extends Mote {
      */
     @Override
     @EnergyCost(30f)
-    public void netReceive(String packet) {
+    public void netReceive(byte[] packet) {
         List<NetField> netFields = netStack.parse(packet);
         if (netFields != null) {
             raftRoleLogic.handlePacket(netFields);

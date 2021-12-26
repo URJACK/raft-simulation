@@ -15,7 +15,9 @@ import java.util.ArrayList;
  */
 public class NormalMote extends Mote {
 
-    public static final String MAC_PREFIX = "EE:EE:EE:EE:EE:";
+    //    public static final byte[] MAC_PREFIX = "EE:EE:EE:EE:EE:";
+    public static final byte[] MAC_PREFIX = {(byte) 0xEE, (byte) 0xEE, (byte) 0xEE,
+            (byte) 0xEE, (byte) 0xEE};
 
     /**
      * @param simulator 模拟器对象引用
@@ -25,8 +27,12 @@ public class NormalMote extends Mote {
      */
     public NormalMote(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
         super(simulator, moteId, x, y, moteClass);
-        String selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
-        equipNetStack(selfMacAddress);
+        try {
+            byte[] selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
+            equipNetStack((Object) selfMacAddress);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -43,13 +49,13 @@ public class NormalMote extends Mote {
 
     @Override
     @EnergyCost(28f)
-    public void netReceive(String packet) {
+    public void netReceive(byte[] packet) {
         ArrayList<NetField> netFields = netStack.parse(packet);
         if (netFields == null) {
             //不满足
             return;
         }
-        call("print", netFields.get(1).value());
+        call("print", new String(netFields.get(1).value()));
     }
 
     /**
@@ -66,9 +72,9 @@ public class NormalMote extends Mote {
      */
     @Override
     public void equipNetStack(Object... args) {
-        String macAddress;
-        if (args[0] instanceof String) {
-            macAddress = (String) args[0];
+        byte[] macAddress;
+        if (args[0] instanceof byte[]) {
+            macAddress = (byte[]) args[0];
         } else {
             new ParseException("NetStack init error, no suitable macAddress").printStackTrace();
             return;

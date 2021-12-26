@@ -21,14 +21,14 @@ public class TransmissionEvent extends Event {
     /**
      * 数据包
      */
-    String packet;
+    byte[] packet;
 
     /**
      * @param triggerTime 到达时间
      * @param receiver    接收的节点（引用对象）
      * @param packet      发送的数据包
      */
-    public TransmissionEvent(long triggerTime, Mote sender, Mote receiver, String packet) {
+    public TransmissionEvent(long triggerTime, Mote sender, Mote receiver, byte[] packet) {
         super(triggerTime);
         this.sender = sender;
         this.receiver = receiver;
@@ -38,6 +38,6 @@ public class TransmissionEvent extends Event {
     @Override
     public void work() {
 //        receiver.netReceive(packet);
-        receiver.call("netReceive", packet);
+        receiver.call("netReceive", (Object) packet);
     }
 }

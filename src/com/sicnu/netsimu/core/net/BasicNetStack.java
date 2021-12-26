@@ -2,6 +2,7 @@ package com.sicnu.netsimu.core.net;
 
 import com.sicnu.netsimu.core.net.ip.BasicIPLayer;
 import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
+import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.exception.ParseException;
 
 import java.util.ArrayList;
@@ -16,23 +17,17 @@ import java.util.ArrayList;
 public class BasicNetStack extends NetStack {
     BasicMACLayer macLayer;
     BasicIPLayer ipLayer;
-    /**
-     * convert 与 parse 都依赖于该变量。
-     * 它是不同NetLayer传输数据的分隔符
-     * <p>
-     * 也正因它是通过分割符来处理层关系，而非字段长度处理层关系
-     * 有一些非ASCII码（低位编码，例如 ascii码为1 ）数据无法进行传输
-     */
-    String SPLIT_CHAR = (char) 1 + "";
+    int stackHeaderLength;
 
     /**
      * 基础网络栈构造函数
      *
      * @param macAddress 当前设备的MAC地址
      */
-    public BasicNetStack(String macAddress) {
+    public BasicNetStack(byte[] macAddress) {
         macLayer = new BasicMACLayer(macAddress);
         ipLayer = new BasicIPLayer();
+        stackHeaderLength = macLayer.getHeaderLength() + ipLayer.getHeaderLength();
     }
 
     /**
@@ -46,10 +41,14 @@ public class BasicNetStack extends NetStack {
      * @return 可传输字符串
      */
     @Override
-    public String convert(String value, NetField... args) {
+    public byte[] convert(Object value, NetField... args) {
         try {
-            String macHeader = macLayer.convert(args[0]);
-            return macHeader + SPLIT_CHAR + value;
+            byte[] macHeader = macLayer.convert(args[0]);
+            byte[] valueByte = value.toString().getBytes();
+            byte[] data = new byte[macHeader.length + valueByte.length];
+            System.arraycopy(macHeader, 0, data, 0, macHeader.length);
+            System.arraycopy(valueByte, 0, data, macHeader.length, valueByte.length);
+            return data;
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -63,20 +62,22 @@ public class BasicNetStack extends NetStack {
      * @return null==无法接收该数据包
      */
     @Override
-    public ArrayList<NetField> parse(String packet) {
-        String[] splits = packet.split(SPLIT_CHAR);
-        if (splits.length != 2) {
+    public ArrayList<NetField> parse(byte[] packet) {
+        if (packet.length < 12) {
             new ParseException("数据包字段数不匹配").printStackTrace();
             return null;
         }
-        String macHeaderStr = splits[0];
-        String value = splits[1];
+        byte[] macHeaderBytes = new byte[12];
+        int valueLength = packet.length - 12;
+        byte[] value = new byte[valueLength];
+        System.arraycopy(packet, 0, macHeaderBytes, 0, 12);
+        System.arraycopy(packet, 12, value, 0, valueLength);
         try {
             ArrayList<NetField> ans = new ArrayList<>(2);
-            if (!macLayer.validate(macHeaderStr)) {
+            if (!macLayer.validate(macHeaderBytes)) {
                 return null;
             }
-            NetField macHeader = macLayer.parse(macHeaderStr);
+            NetField macHeader = macLayer.parse(macHeaderBytes);
             NetField data = new NetApplicationLayerData(value);
             ans.add(macHeader);
             ans.add(data);
@@ -94,7 +95,7 @@ public class BasicNetStack extends NetStack {
      * @return 信息内容
      */
     @Override
-    public String getInfo(String key) {
+    public Object getInfo(String key) {
         return switch (key) {
             case "mac" -> macLayer.getMacSourceAddress();
             case "ip" -> ipLayer.getIpSourceAddress();
@@ -109,19 +110,25 @@ public class BasicNetStack extends NetStack {
      * @param value 被设置的值
      */
     @Override
-    public void setInfo(String key, Object value) {
+    public void setInfo(String key, Object value) throws ParseException {
         switch (key) {
-            case "mac" -> macLayer.setMacSourceAddress(String.valueOf(value));
-            case "ip" -> ipLayer.setIpSourceAddress(String.valueOf(value));
+            case "mac" -> {
+                if (value instanceof String) {
+                    byte[] address = MoteCalculate.convertStrAddressIntoByteAddress((String) value);
+                    macLayer.setMacSourceAddress(address);
+                } else {
+                    new ParseException("input value's type is not String").printStackTrace();
+                }
+            }
+            case "ip" -> {
+                if (value instanceof String) {
+                    byte[] address = ((String) value).getBytes();
+                    ipLayer.setIpSourceAddress(address);
+                } else {
+                    new ParseException("input value's type is not String").printStackTrace();
+                }
+            }
             default -> new Exception("Error Init Mote Info with key:" + key).printStackTrace();
         }
-    }
-
-    public static void main(String[] args) {
-        String a = "1234";
-        Object b = a;
-//        String c = (String) b;
-        String c = b.toString();
-        System.out.println(c);
     }
 }

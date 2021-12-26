@@ -158,7 +158,8 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      */
     @Override
     public void handlePacket(List<NetField> packet) {
-        String data = packet.get(1).value();
+        byte[] dataBytes = packet.get(1).value();
+        String data = new String(dataBytes);
         //从数据包中取得第一个条数据 --- Raft数据包 标识
         int rpcType = RaftUtils.getFirstValFromString(data);
         switch (rpcType) {
@@ -220,7 +221,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      * @param packet 数据包（心跳包回执）
      */
     private void receiveRPCHeartBeatsResp(List<NetField> packet) {
-        String data = packet.get(1).value();
+        String data = new String(packet.get(1).value());
         HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(data);
         int followerId = respRPC.getSenderId();
         if (respRPC.getIsMatched() == 1) {
@@ -257,7 +258,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      * @param packet 数据包（心跳包）
      */
     private void receiveRPCHeartBeats(List<NetField> packet) {
-        String data = packet.get(1).value();
+        String data = new String(packet.get(1).value());
         HeartBeatsRPC beatsRPC = new HeartBeatsRPC(data);
 //        mote.print("beats : " + beatsRPC.toString());
         mote.print(raftLogTable.toString());
@@ -324,7 +325,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      * @param packet 数据包（选举包回执）
      */
     private void receiveRPCElectResp(List<NetField> packet) {
-        String data = packet.get(1).value();
+        String data = new String(packet.get(1).value());
         ElectionRespRPC rpc = new ElectionRespRPC(data);
         if (rpc.getVoteGranted() == 1) {
             /*
@@ -376,7 +377,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      * @param packet 数据包（选举包）
      */
     private void receiveRPCElect(List<NetField> packet) {
-        String data = packet.get(1).value();
+        String data = new String(packet.get(1).value());
         ElectionRPC rpc = new ElectionRPC(data);
         //检查RPC是否满足条件
         boolean result = electRPCValidateChecking(rpc);
@@ -537,8 +538,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
 
         private CommitCheckList getSuitableCheckList(int matchIndex) {
             //如果返回的matchIndex比我们的commitIndex更大
-            for (int i = 0; i < matchRecords.size(); i++) {
-                CommitCheckList checkList = matchRecords.get(i);
+            for (CommitCheckList checkList : matchRecords) {
                 int listIndex = checkList.getCommitIndex();
                 if (listIndex == matchIndex) {
                     //找到了List
@@ -683,9 +683,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                 if (!visited[senderId]) {
                     visited[senderId] = true;
                     visitCount++;
-                    if (visitCount > n / 2) {
-                        return true;
-                    }
+                    return visitCount > n / 2;
                 }
                 return false;
             }
@@ -881,10 +879,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
         public boolean shouldElectCheck() {
             long time = mote.getSimulator().getTime();
             //如果超时了 此时才可以进行选举
-            if (time > electActionLimitTime) {
-                return true;
-            }
-            return false;
+            return time > electActionLimitTime;
         }
 
         /**

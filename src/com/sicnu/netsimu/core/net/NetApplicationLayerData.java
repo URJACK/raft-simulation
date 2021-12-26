@@ -4,14 +4,14 @@ package com.sicnu.netsimu.core.net;
  * 应用层数据
  */
 public class NetApplicationLayerData implements NetField {
-    String value;
+    byte[] value;
 
-    public NetApplicationLayerData(String value) {
+    public NetApplicationLayerData(byte[] value) {
         this.value = value;
     }
 
     @Override
-    public String value() {
+    public byte[] value() {
         return value;
     }
 }

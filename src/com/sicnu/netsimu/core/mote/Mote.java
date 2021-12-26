@@ -63,7 +63,7 @@ public abstract class Mote {
      *
      * @param packet 接受到的数据包
      */
-    public abstract void netReceive(String packet);
+    public abstract void netReceive(byte[] packet);
 
     /**
      * 由构造函数进行调用
@@ -84,7 +84,7 @@ public abstract class Mote {
      * @param packet 发送的数据包
      */
     @EnergyCost(30f)
-    public final void netSend(String packet) {
+    public final void netSend(byte[] packet) {
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
         transmissionManager.moteSendPacket(this, packet);
     }
