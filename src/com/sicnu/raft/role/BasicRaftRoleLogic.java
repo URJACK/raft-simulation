@@ -653,7 +653,8 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
             public CommitCheckList(int commitIndex) {
                 this.commitIndex = commitIndex;
                 this.visited = new boolean[n + 1];
-                this.visitCount = 0;
+                this.visitCount = 1;
+                this.visited[mote.getMoteId()] = true;
             }
 
             /**
