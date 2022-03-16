@@ -41,10 +41,10 @@ public class BasicNetStack extends NetStack {
      * @return 可传输字符串
      */
     @Override
-    public byte[] convert(Object value, NetField... args) {
+    public byte[] convert(byte[] value, NetField... args) {
         try {
             byte[] macHeader = macLayer.convert(args[0]);
-            byte[] valueByte = value.toString().getBytes();
+            byte[] valueByte = value;
             byte[] data = new byte[macHeader.length + valueByte.length];
             System.arraycopy(macHeader, 0, data, 0, macHeader.length);
             System.arraycopy(valueByte, 0, data, macHeader.length, valueByte.length);
@@ -57,6 +57,7 @@ public class BasicNetStack extends NetStack {
 
     /**
      * 通过网络栈检查自己是否可以接收该数据包
+     * packet 的字段按 MAC -> IP -> ... -> APPLICATION 进行排序
      *
      * @param packet 传输来的数据包
      * @return null==无法接收该数据包

@@ -1,6 +1,7 @@
 package com.sicnu.netsimu.core.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
+import com.sicnu.netsimu.core.mote.MoteManager;
 import lombok.Data;
 
 /**
@@ -30,6 +31,9 @@ public class NodeDelCommand extends Command {
 
     @Override
     public void work() {
-
+        MoteManager moteManager = simulator.getMoteManager();
+        if (moteManager.containMote(nodeId)) {
+            moteManager.deleteMote(nodeId);
+        }
     }
 }

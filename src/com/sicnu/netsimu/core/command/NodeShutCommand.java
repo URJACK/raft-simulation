@@ -1,6 +1,8 @@
 package com.sicnu.netsimu.core.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
+import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.mote.MoteManager;
 import lombok.Data;
 
 /**
@@ -23,6 +25,16 @@ public class NodeShutCommand extends Command {
 
     @Override
     public void work() {
-
+        MoteManager moteManager = simulator.getMoteManager();
+        if (moteManager.containMote(nodeId)) {
+            Mote mote = moteManager.getMote(nodeId);
+            if (mote == null) {
+                //获取节点失败
+                return;
+            }
+            // 每个新结点，都将触发自身的shut()函数
+//            mote.shut();
+            mote.call("shut");
+        }
     }
 }

@@ -95,4 +95,13 @@ public class MoteManager {
     public ArrayList<Mote> getAllMotes() {
         return motes;
     }
+
+    /**
+     * 删除节点
+     *
+     * @param nodeId 被删除的节点id
+     */
+    public void deleteMote(int nodeId) {
+
+    }
 }

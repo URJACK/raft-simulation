@@ -1,9 +1,9 @@
 package com.sicnu.netsimu.core.net;
 
+import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
 import com.sicnu.netsimu.exception.ParseException;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public abstract class NetStack {
 
@@ -17,7 +17,7 @@ public abstract class NetStack {
      * @param args  Header与传输的数据
      * @return 可传输字符串
      */
-    public abstract byte[] convert(Object value, NetField... args);
+    public abstract byte[] convert(byte[] value, NetField... args);
 
     /**
      * 通过网络栈检查自己是否可以接收该数据包
@@ -56,4 +56,10 @@ public abstract class NetStack {
      * @param value 被设置的值
      */
     public abstract void setInfo(String key, Object value) throws ParseException;
+
+    public byte[] macSendingPacket(byte[] data, byte[] dstMac) throws ParseException {
+        BasicMACLayer.Header header = null;
+        header = new BasicMACLayer.Header((byte[]) getInfo("mac"), dstMac);
+        return convert(data, header);
+    }
 }

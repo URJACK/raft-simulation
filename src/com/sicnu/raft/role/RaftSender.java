@@ -38,9 +38,10 @@ public class RaftSender {
         NetStack stack = mote.getNetStack();
         byte[] dstMac = BasicMACLayer.BROAD_CAST;
         try {
-            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) stack.getInfo("mac"), dstMac);
-            byte[] packet = stack.convert(rpc.convert(), header);
+            byte[] packet = stack.macSendingPacket(rpc.convert().getBytes(), dstMac);
             mote.netSend(packet);
+//            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) stack.getInfo("mac"), dstMac);
+//            packet = stack.convert(rpc.convert(), header);
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -56,8 +57,9 @@ public class RaftSender {
         NetStack stack = mote.getNetStack();
         try {
             byte[] dstMac = MoteCalculate.convertMACAddressWithMoteId(RaftMote.MAC_PREFIX, desMoteId);
-            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) stack.getInfo("mac"), dstMac);
-            byte[] packet = stack.convert(rpc.convert(), header);
+            byte[] packet = stack.macSendingPacket(rpc.convert().getBytes(), dstMac);
+//            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) stack.getInfo("mac"), dstMac);
+//            byte[] packet = stack.convert(rpc.convert(), header);
             mote.netSend(packet);
         } catch (ParseException e) {
             e.printStackTrace();

@@ -17,9 +17,8 @@ public class TestCase3RaftSimuInterceptor {
             int n = 3;
             NetSimulationRandom.setNetRandomSeed((long) (Math.random() * 100000));
 //            NetSimulationRandom.setNetRandomSeed(70);
-            CommandTranslator translator = new RaftCommandTranslator();
-            //新增了endTime属性， 仿真器超过该时间后，就会停止仿真
             NetSimulator simulator = new NetSimulator(3000);
+            CommandTranslator translator = new RaftCommandTranslator();
             translator.equipSimulator(simulator);
             translator.read("resources/commands_raft_3_op.txt");
 //            translator.read("resources/commands_1.txt");
@@ -32,7 +31,9 @@ public class TestCase3RaftSimuInterceptor {
             simulator.setPreEventInterceptor(new RaftCalculateInPreEventInterceptor(simulator, raftSummarizer));
             //每次事件结束后，它会计算Raft相关的指标
             simulator.setPostEventInterceptor(new RaftCalculateInPostEventInterceptor(simulator, raftSummarizer));
+            //开始仿真
             simulator.run();
+            //运行完成后，打印随机数种子
             System.out.println("NetRandomSeed = " + NetSimulationRandom.getNetRandomSeed());
         } catch (Exception e) {
             e.printStackTrace();
