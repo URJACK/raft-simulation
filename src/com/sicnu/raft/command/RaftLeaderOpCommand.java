@@ -2,8 +2,8 @@ package com.sicnu.raft.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.command.Command;
-import com.sicnu.netsimu.core.mote.Mote;
-import com.sicnu.raft.mote.RaftMote;
+import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.raft.node.RaftNode;
 import com.sicnu.raft.role.RaftRoleLogic;
 import lombok.Data;
 
@@ -21,7 +21,7 @@ import lombok.Data;
  * 1200, RAFT_LEADER_OP, add, name, hello
  * </pre>
  *
- * @see RaftMote
+ * @see RaftNode
  * @see RaftRoleLogic
  */
 @Data
@@ -48,16 +48,16 @@ public class RaftLeaderOpCommand extends Command {
 
     @Override
     public void work() {
-        for (Mote mote : simulator.getMoteManager().getAllMotes()) {
-            if (!(mote instanceof RaftMote)) {
+        for (Node node : simulator.getMoteManager().getAllMotes()) {
+            if (!(node instanceof RaftNode)) {
                 continue;
             }
-            RaftMote raftMote = (RaftMote) mote;
-            if (raftMote.getRole() != RaftRoleLogic.ROLE_LEADER) {
+            RaftNode raftNode = (RaftNode) node;
+            if (raftNode.getRole() != RaftRoleLogic.ROLE_LEADER) {
                 continue;
             }
             // 所有的Leader都会执行该操作
-            raftMote.logOperate(operation, key, value);
+            raftNode.logOperate(operation, key, value);
         }
     }
 }

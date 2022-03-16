@@ -1,10 +1,6 @@
 package com.sicnu.raft.role;
 
-import com.sicnu.netsimu.core.net.NetField;
-import com.sicnu.raft.log.RaftLogTable;
-import com.sicnu.raft.mote.RaftMote;
-
-import java.util.List;
+import com.sicnu.raft.node.RaftNode;
 
 /**
  * 涓流算法逻辑，基础逻辑相同，主要有三个地方需要进行修改。
@@ -24,7 +20,7 @@ public class TrickleRaftRoleLogic extends BasicRaftRoleLogic {
      * @param mote
      * @param nodeNum Raft节点个数
      */
-    public TrickleRaftRoleLogic(RaftMote mote, int nodeNum) {
+    public TrickleRaftRoleLogic(RaftNode mote, int nodeNum) {
         super(mote, nodeNum);
     }
 

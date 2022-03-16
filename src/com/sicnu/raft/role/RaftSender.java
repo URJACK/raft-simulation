@@ -4,7 +4,7 @@ import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.exception.ParseException;
-import com.sicnu.raft.mote.RaftMote;
+import com.sicnu.raft.node.RaftNode;
 import com.sicnu.raft.role.rpc.RPCConvert;
 
 /**
@@ -18,13 +18,13 @@ public class RaftSender {
     /**
      * 记录Raft节点的引用
      */
-    private RaftMote mote;
+    private RaftNode mote;
 
     /**
      * @param mote     Raft的节点引用
      * @param NODE_NUM Raft算法节点个数
      */
-    public RaftSender(RaftMote mote, int NODE_NUM) {
+    public RaftSender(RaftNode mote, int NODE_NUM) {
         this.mote = mote;
         this.NODE_NUM = NODE_NUM;
     }
@@ -56,7 +56,7 @@ public class RaftSender {
     public void uniCast(int desMoteId, RPCConvert rpc) {
         NetStack stack = mote.getNetStack();
         try {
-            byte[] dstMac = MoteCalculate.convertMACAddressWithMoteId(RaftMote.MAC_PREFIX, desMoteId);
+            byte[] dstMac = MoteCalculate.convertMACAddressWithMoteId(RaftNode.MAC_PREFIX, desMoteId);
             byte[] packet = stack.macSendingPacket(rpc.convert().getBytes(), dstMac);
 //            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) stack.getInfo("mac"), dstMac);
 //            byte[] packet = stack.convert(rpc.convert(), header);

@@ -2,6 +2,7 @@ package com.sicnu.netsimu.core.net.mac;
 
 import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.netsimu.core.net.NetLayer;
+import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.exception.ParseException;
 import lombok.Data;
 
@@ -13,7 +14,7 @@ import java.util.Arrays;
  * <p>
  * MACLayer层，存储了自身的mac地址
  *
- * @see com.sicnu.netsimu.core.mote.Mote
+ * @see Node
  * @see NetLayer
  */
 public class BasicMACLayer extends NetLayer {

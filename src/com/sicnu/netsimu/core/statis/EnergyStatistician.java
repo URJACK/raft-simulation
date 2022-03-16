@@ -1,25 +1,24 @@
 package com.sicnu.netsimu.core.statis;
 
-import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.node.Node;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 能耗统计者 每个节点都持有一个能耗统计者
  */
 public class EnergyStatistician implements Statistician<Float> {
-    Mote mote;
+    Node node;
     float sum;
     HashMap<String, Float> map;
 
     /**
      * 能耗统计者
      *
-     * @param mote 节点引用
+     * @param node 节点引用
      */
-    public EnergyStatistician(Mote mote) {
-        this.mote = mote;
+    public EnergyStatistician(Node node) {
+        this.node = node;
         map = new HashMap<>();
         clear();
     }

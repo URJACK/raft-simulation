@@ -1,8 +1,8 @@
 package com.sicnu.netsimu.core.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.mote.Mote;
-import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.netsimu.core.node.NodeManager;
 import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
@@ -17,7 +17,7 @@ import lombok.Data;
  * 发送的逻辑，本质上是先调用NetStack的convert方法，得到发送的数据字符串，
  * 再调用 Mote 的 netSend 方法
  *
- * @see Mote
+ * @see Node
  * @see NetStack
  */
 @Data
@@ -53,9 +53,9 @@ public class NetSendCommand extends Command {
 
     @Override
     public void work() {
-        MoteManager moteManager = simulator.getMoteManager();
-        Mote mote = moteManager.getMote(nodeId);
-        NetStack netStack = mote.getNetStack();
+        NodeManager nodeManager = simulator.getMoteManager();
+        Node node = nodeManager.getMote(nodeId);
+        NetStack netStack = node.getNetStack();
 //        mote.netSend(new TransmissionPacket(srcIp, dstIp, srcPort, dstPort, value));
         try {
             BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) netStack.getInfo("mac"), dstMac);

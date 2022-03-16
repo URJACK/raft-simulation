@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.core.mote;
+package com.sicnu.netsimu.core.node;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 /**
  * 基础节点
  */
-public class NormalMote extends Mote {
+public class NormalNode extends Node {
 
     //    public static final byte[] MAC_PREFIX = "EE:EE:EE:EE:EE:";
     public static final byte[] MAC_PREFIX = {(byte) 0xEE, (byte) 0xEE, (byte) 0xEE,
@@ -25,7 +25,7 @@ public class NormalMote extends Mote {
      * @param x         节点的x坐标
      * @param y         节点的y坐标
      */
-    public NormalMote(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
+    public NormalNode(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
         super(simulator, moteId, x, y, moteClass);
         try {
             byte[] selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);

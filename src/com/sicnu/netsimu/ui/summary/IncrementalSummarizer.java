@@ -1,12 +1,6 @@
 package com.sicnu.netsimu.ui.summary;
 
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.mote.Mote;
-import com.sicnu.netsimu.core.mote.MoteManager;
-import com.sicnu.netsimu.core.statis.EnergyStatistician;
-import com.sicnu.netsimu.core.statis.Statistician;
-
-import java.util.*;
 
 /**
  * 增量总结器

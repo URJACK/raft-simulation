@@ -2,7 +2,7 @@ package com.sicnu.raft.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.command.Command;
-import com.sicnu.raft.mote.RaftMote;
+import com.sicnu.raft.node.RaftNode;
 import com.sicnu.raft.role.RaftRoleLogic;
 import lombok.Data;
 
@@ -16,7 +16,7 @@ import lombok.Data;
  * 1200, RAFT_OP, 1, add, name, hello
  * </pre>
  *
- * @see RaftMote
+ * @see RaftNode
  * @see RaftRoleLogic
  */
 @Data
@@ -45,7 +45,7 @@ public class RaftOpCommand extends Command {
 
     @Override
     public void work() {
-        RaftMote mote = (RaftMote) simulator.getMoteManager().getMote(nodeId);
+        RaftNode mote = (RaftNode) simulator.getMoteManager().getMote(nodeId);
         mote.logOperate(operation, key, value);
     }
 }

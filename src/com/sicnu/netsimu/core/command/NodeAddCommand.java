@@ -2,8 +2,8 @@ package com.sicnu.netsimu.core.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.net.TransmissionManager;
-import com.sicnu.netsimu.core.mote.Mote;
-import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.netsimu.core.node.NodeManager;
 import lombok.Data;
 
 /**
@@ -48,12 +48,12 @@ public class NodeAddCommand extends Command {
 
     @Override
     public void work() {
-        MoteManager moteManager = simulator.getMoteManager();
+        NodeManager nodeManager = simulator.getMoteManager();
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
-        if (!moteManager.containMote(nodeId)) {
+        if (!nodeManager.containMote(nodeId)) {
             //如果当前节点的id已经存在 则无法进行添加节点
-            Mote newMote = moteManager.addMote(nodeId, x, y, nodeClass, args);
-            if (newMote == null) {
+            Node newNode = nodeManager.addMote(nodeId, x, y, nodeClass, args);
+            if (newNode == null) {
                 //创建节点失败
                 return;
             }
@@ -61,7 +61,7 @@ public class NodeAddCommand extends Command {
             transmissionManager.addNode(nodeId);
             // 每个新结点，都将触发自身的init()函数
 //            newMote.init();
-            newMote.call("init");
+            newNode.call("init");
         }
     }
 }

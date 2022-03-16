@@ -1,8 +1,8 @@
 package com.sicnu.netsimu.core.command;
 
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.mote.Mote;
-import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.netsimu.core.node.NodeManager;
 import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.exception.ParseException;
 import lombok.Data;
@@ -44,9 +44,9 @@ public class NetInitCommand extends Command {
 
     @Override
     public void work() {
-        MoteManager moteManager = simulator.getMoteManager();
-        Mote mote = moteManager.getMote(nodeId);
-        NetStack netStack = mote.getNetStack();
+        NodeManager nodeManager = simulator.getMoteManager();
+        Node node = nodeManager.getMote(nodeId);
+        NetStack netStack = node.getNetStack();
         try {
             netStack.setInfo(operation, value);
         } catch (ParseException e) {

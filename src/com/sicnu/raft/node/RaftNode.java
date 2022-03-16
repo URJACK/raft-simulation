@@ -1,15 +1,14 @@
-package com.sicnu.raft.mote;
+package com.sicnu.raft.node;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
-import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.exception.ParseException;
-import com.sicnu.raft.role.BasicRaftRoleLogic;
 import com.sicnu.raft.role.RaftRoleLogic;
 import com.sicnu.raft.log.RaftLogTable;
 
@@ -23,7 +22,7 @@ import java.util.List;
  * 1000, NODE_ADD, 3, 250, 100, com.sicnu.raft.mote.RaftMote, 3, com.sicnu.raft.role.BasicRaftRoleLogic
  * </pre>
  */
-public class RaftMote extends Mote {
+public class RaftNode extends Node {
     //    public static final String IP_PREFIX = "192.168.0.";
 //    public static final String MAC_PREFIX = "EE:EE:EE:EE:EE:";
     public static final byte[] MAC_PREFIX = {(byte) 0xEE, (byte) 0xEE,
@@ -45,7 +44,7 @@ public class RaftMote extends Mote {
      * @param x         节点x坐标
      * @param y         节点y坐标
      */
-    public RaftMote(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
+    public RaftNode(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
         super(simulator, moteId, x, y, moteClass);
         try {
             //Raft节点记录下的NODE_NUM数
@@ -54,7 +53,7 @@ public class RaftMote extends Mote {
             byte[] selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
             String rolePath = args[1];
             Class<?> roleClazz = Class.forName(rolePath);
-            Constructor<?> constructor = roleClazz.getDeclaredConstructor(RaftMote.class, int.class);
+            Constructor<?> constructor = roleClazz.getDeclaredConstructor(RaftNode.class, int.class);
             raftRoleLogic = (RaftRoleLogic) constructor.newInstance(this, NODE_NUM);
             equipNetStack((Object) selfMacAddress);
         } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | InstantiationException | IllegalAccessException | ParseException e) {
@@ -126,7 +125,7 @@ public class RaftMote extends Mote {
      * @param key           操作键
      * @param value         操作值
      * @see RaftOpCommand
-     * @see RaftMote
+     * @see RaftNode
      * @see RaftRoleLogic
      */
     public void logOperate(String operationType, String key, String value) {

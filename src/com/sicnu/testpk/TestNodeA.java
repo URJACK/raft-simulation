@@ -2,7 +2,7 @@ package com.sicnu.testpk;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
-import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.netsimu.core.net.NetStack;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 /**
  * 基础节点
  */
-public class TestMoteA extends Mote {
+public class TestNodeA extends Node {
 
     //    public static final byte[] MAC_PREFIX = "EE:EE:EE:EE:EE:";
     public static final byte[] MAC_PREFIX = {(byte) 0xEE, (byte) 0xEE, (byte) 0xEE,
@@ -27,7 +27,7 @@ public class TestMoteA extends Mote {
      * @param x         节点的x坐标
      * @param y         节点的y坐标
      */
-    public TestMoteA(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
+    public TestNodeA(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
         super(simulator, moteId, x, y, moteClass);
         try {
             byte[] selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);

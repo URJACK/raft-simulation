@@ -2,14 +2,14 @@ package com.sicnu.raft.role;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
-import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.raft.RaftUtils;
 import com.sicnu.netsimu.annotation.NotNull;
 import com.sicnu.raft.command.RaftOpCommand;
 import com.sicnu.netsimu.exception.ParameterException;
 import com.sicnu.netsimu.exception.RaftRuntimeException;
-import com.sicnu.raft.mote.RaftMote;
+import com.sicnu.raft.node.RaftNode;
 import com.sicnu.raft.log.RaftLogItem;
 import com.sicnu.raft.log.RaftLogTable;
 import com.sicnu.raft.role.rpc.*;
@@ -66,7 +66,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      *
      * @param nodeNum Raft节点个数
      */
-    public BasicRaftRoleLogic(RaftMote mote, int nodeNum) {
+    public BasicRaftRoleLogic(RaftNode mote, int nodeNum) {
         super(mote, nodeNum);
         // 设定节点为跟随者
         role = ROLE_FOLLOWER;
@@ -187,7 +187,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
      * @param key           操作键
      * @param value         操作值
      * @see RaftOpCommand
-     * @see RaftMote
+     * @see RaftNode
      * @see RaftRoleLogic
      */
     @Override
@@ -919,10 +919,10 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
          * @param spanTime  延时间隔
          * @param isLoop    是否循环
          * @param simulator 模拟器引用
-         * @param selfMote  调用setTimeout的节点引用
+         * @param selfNode  调用setTimeout的节点引用
          */
-        public ElectionTimeoutEvent(long spanTime, boolean isLoop, NetSimulator simulator, Mote selfMote, int term) {
-            super(spanTime, isLoop, simulator, selfMote);
+        public ElectionTimeoutEvent(long spanTime, boolean isLoop, NetSimulator simulator, Node selfNode, int term) {
+            super(spanTime, isLoop, simulator, selfNode);
             this.term = term;
         }
 

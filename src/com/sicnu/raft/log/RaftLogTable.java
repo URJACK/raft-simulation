@@ -1,6 +1,7 @@
 package com.sicnu.raft.log;
 
 import com.sicnu.netsimu.exception.ParseException;
+import com.sicnu.raft.node.RaftNode;
 import com.sicnu.raft.role.RaftRoleLogic;
 
 import java.util.ArrayList;
@@ -75,7 +76,7 @@ public class RaftLogTable {
      * @param operation 操作类型
      * @param key       操作键
      * @param value     操作值
-     * @see com.sicnu.raft.mote.RaftMote
+     * @see RaftNode
      */
     public void addLogInLast(String operation, String key, String value, int term) {
         // 新增日志条目的index 肯定比当前的n 要多1一个

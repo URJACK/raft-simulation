@@ -6,7 +6,7 @@ import com.sicnu.netsimu.core.event.Event;
 import com.sicnu.netsimu.core.event.EventInterceptor;
 import com.sicnu.netsimu.core.event.EventManager;
 import com.sicnu.netsimu.core.net.TransmissionManager;
-import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.node.NodeManager;
 import com.sicnu.netsimu.ui.InfoOutputManager;
 import com.sicnu.netsimu.ui.summary.Summarizer;
 
@@ -24,7 +24,7 @@ public class NetSimulator {
     //传输记录器 用来记录每个节点的邻居节点信息
     TransmissionManager transmissionManager;
     //节点管理器 管理结点的存储
-    MoteManager moteManager;
+    NodeManager nodeManager;
     //事件管理器 用来快速驱动事件的推动
     EventManager eventManager;
     //信息输出管理器
@@ -43,7 +43,7 @@ public class NetSimulator {
     public NetSimulator(long endTime) {
         transmissionManager = new TransmissionManager(this);
         eventManager = new EventManager(this);
-        moteManager = new MoteManager(this);
+        nodeManager = new NodeManager(this);
         infoOutputManager = new InfoOutputManager(this);
         this.endTime = endTime;
     }
@@ -115,8 +115,8 @@ public class NetSimulator {
         return transmissionManager;
     }
 
-    public MoteManager getMoteManager() {
-        return moteManager;
+    public NodeManager getMoteManager() {
+        return nodeManager;
     }
 
     public EventManager getEventManager() {

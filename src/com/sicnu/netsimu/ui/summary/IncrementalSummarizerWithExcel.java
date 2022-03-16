@@ -1,8 +1,8 @@
 package com.sicnu.netsimu.ui.summary;
 
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.mote.Mote;
-import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.netsimu.core.node.NodeManager;
 import com.sicnu.netsimu.core.net.TransmissionManager;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -98,16 +98,16 @@ public class IncrementalSummarizerWithExcel extends IncrementalSummarizer {
      */
     @Override
     protected void processBasicCalc() {
-        MoteManager moteManager = simulator.getMoteManager();
-        ArrayList<Mote> allMotes = moteManager.getAllMotes();
-        for (Mote mote : allMotes) {
-            EnergyStatistician energyStatistician = mote.getSingleMoteEnergyStatistician();
+        NodeManager nodeManager = simulator.getMoteManager();
+        ArrayList<Node> allNodes = nodeManager.getAllMotes();
+        for (Node node : allNodes) {
+            EnergyStatistician energyStatistician = node.getSingleMoteEnergyStatistician();
             //获得每个节点的能耗
             Float statisticianAllSummary = energyStatistician.getAllSummary();
             //清空这个时间点的能耗记录
             energyStatistician.clear();
             //将这次到上次调用之间时段 “时段能耗数据” 进行统计
-            List<Float> list = energyCalcMap.computeIfAbsent(mote.getMoteId(), k -> new LinkedList<>());
+            List<Float> list = energyCalcMap.computeIfAbsent(node.getMoteId(), k -> new LinkedList<>());
             //将“时段能耗数据”塞入对应节点的列表中
             list.add(statisticianAllSummary);
         }

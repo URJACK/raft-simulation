@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.core.mote;
+package com.sicnu.netsimu.core.node;
 
 import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.statis.EnergyCost;
@@ -16,7 +16,7 @@ import java.lang.reflect.Method;
  * 节点对象 是我们仿真程序中的一个基础类
  * 每个节点对象之间的各类交互，就是我们的仿真的基础
  */
-public abstract class Mote {
+public abstract class Node {
     protected NetSimulator simulator;
     protected int moteId;
     protected float x;
@@ -44,7 +44,7 @@ public abstract class Mote {
      * @param y         节点的y坐标
      * @param args      潜在的额外参数
      */
-    public Mote(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
+    public Node(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
         this.simulator = simulator;
         this.moteId = moteId;
         this.x = x;

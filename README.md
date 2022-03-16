@@ -52,7 +52,7 @@ raft包使用 `com.sicnu.raft` ，也就是核心部分作为依赖，并进行�
    }
    ```
 
-2. 编写了 `com.sicnu.raft.mote` 中的 `RaftMote` 
+2. 编写了 `com.sicnu.raft.node` 中的 `RaftMote` 
 
    ```java
    public class RaftMote extends Mote {

@@ -4,8 +4,8 @@ import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.command.NodeAddCommand;
 import com.sicnu.netsimu.core.command.NodeDelCommand;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
-import com.sicnu.netsimu.core.mote.Mote;
-import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.netsimu.core.node.NodeManager;
 import com.sicnu.netsimu.core.statis.TransmitStatistician;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.core.utils.NetSimulationRandom;
@@ -20,7 +20,7 @@ import java.util.*;
  * 每次RaftSimulator 进行 “节点创建”、“节点删除”，
  * 都会使得TransmissionManager，对各个节点之间的关系进行重算。
  *
- * @see Mote
+ * @see Node
  * @see NodeAddCommand
  * @see NodeDelCommand
  */
@@ -97,11 +97,11 @@ public class TransmissionManager {
     /**
      * 取得这个节点的传输范围内的其他节点
      *
-     * @param mote
+     * @param node
      * @return
      */
-    public List<Neighbor> getNeighbors(Mote mote) {
-        return table.get(mote.getMoteId());
+    public List<Neighbor> getNeighbors(Node node) {
+        return table.get(node.getMoteId());
     }
 
     /**
@@ -120,24 +120,24 @@ public class TransmissionManager {
      * @param nodeId 新增的节点id号
      */
     public void addNode(int nodeId) {
-        MoteManager moteManager = simulator.getMoteManager();
-        ArrayList<Mote> motes = moteManager.getAllMotes();
+        NodeManager nodeManager = simulator.getMoteManager();
+        ArrayList<Node> nodes = nodeManager.getAllMotes();
         LinkedList<Neighbor> neighborsOfA = table.computeIfAbsent(nodeId, k -> new LinkedList<>());
-        Mote moteA = moteManager.getMote(nodeId);
-        for (int i = 0; i < motes.size(); i++) {
-            Mote moteB = motes.get(i);
-            LinkedList<Neighbor> neighborsOfB = table.computeIfAbsent(moteB.getMoteId(), k -> new LinkedList<>());
-            if (moteB.getMoteId() == (nodeId)) {
+        Node nodeA = nodeManager.getMote(nodeId);
+        for (int i = 0; i < nodes.size(); i++) {
+            Node nodeB = nodes.get(i);
+            LinkedList<Neighbor> neighborsOfB = table.computeIfAbsent(nodeB.getMoteId(), k -> new LinkedList<>());
+            if (nodeB.getMoteId() == (nodeId)) {
                 //不计算自己和自己
                 continue;
             }
-            float distance = MoteCalculate.eulaDistance(moteB, moteA);
+            float distance = MoteCalculate.eulaDistance(nodeB, nodeA);
             if (distance > MAX_TRANSMIT_DISTANCE) {
                 //距离太远无法成为邻居
                 continue;
             }
-            Neighbor neighborOfA = new Neighbor(moteB, distance, calculateTransmitErrorRate(distance));
-            Neighbor neighborOfB = new Neighbor(moteA, distance, calculateTransmitErrorRate(distance));
+            Neighbor neighborOfA = new Neighbor(nodeB, distance, calculateTransmitErrorRate(distance));
+            Neighbor neighborOfB = new Neighbor(nodeA, distance, calculateTransmitErrorRate(distance));
             neighborsOfA.add(neighborOfA);
             neighborsOfB.add(neighborOfB);
         }
@@ -148,31 +148,31 @@ public class TransmissionManager {
      * <p>
      * 这里会计算数据包失败的概率，如果失败的话，发送的数据包是不会被计入发送事件的。
      *
-     * @param senderMote 发送方节点引用
+     * @param senderNode 发送方节点引用
      * @param packet     需要发送的数据包
      */
-    public void moteSendPacket(Mote senderMote, byte[] packet) {
-        List<TransmissionManager.Neighbor> neighbors = getNeighbors(senderMote);
+    public void moteSendPacket(Node senderNode, byte[] packet) {
+        List<TransmissionManager.Neighbor> neighbors = getNeighbors(senderNode);
         //从传输管理器中 查询该节点的邻居节点
         for (TransmissionManager.Neighbor neighbor : neighbors) {
-            Mote receiverMote = neighbor.getMote();
+            Node receiverNode = neighbor.getNode();
             //获取到与neighbor的距离
             float distance = neighbor.getDistance();
             //得到的随机值
             float randomVote = NetSimulationRandom.nextFloat();
             float errorRate = neighbor.getErrorRate();
-            TransmissionEvent event = new TransmissionEvent(calcTransmissionTime(distance) + simulator.getTime(), senderMote, receiverMote, packet);
+            TransmissionEvent event = new TransmissionEvent(calcTransmissionTime(distance) + simulator.getTime(), senderNode, receiverNode, packet);
             if (randomVote > errorRate) {
                 //获取到neighbor指向的mote本身
                 //无论该节点的ip和端口信息是否满足 数据包的目的地要求 我们都将其进行传输
                 simulator.getEventManager().pushEvent(event);
                 // 发送数据包成功后 进行数据的统计
-                successSendStatistician.addValue(String.valueOf(senderMote.getMoteId()), 1);
-                successReceiveStatistician.addValue(String.valueOf(receiverMote.getMoteId()), 1);
+                successSendStatistician.addValue(String.valueOf(senderNode.getMoteId()), 1);
+                successReceiveStatistician.addValue(String.valueOf(receiverNode.getMoteId()), 1);
             } else {
                 // 发送数据包失败后 进行数据的统计
-                failedSendStatistician.addValue(String.valueOf(senderMote.getMoteId()), 1);
-                failedReceiveStatistician.addValue(String.valueOf(receiverMote.getMoteId()), 1);
+                failedSendStatistician.addValue(String.valueOf(senderNode.getMoteId()), 1);
+                failedReceiveStatistician.addValue(String.valueOf(receiverNode.getMoteId()), 1);
             }
         }
     }
@@ -229,7 +229,7 @@ public class TransmissionManager {
         /**
          * 对应的节点引用
          */
-        Mote mote;
+        Node node;
         /**
          * 与该邻居的距离
          */
@@ -239,8 +239,8 @@ public class TransmissionManager {
          */
         float errorRate;
 
-        public Neighbor(Mote mote, float distance, float errorRate) {
-            this.mote = mote;
+        public Neighbor(Node node, float distance, float errorRate) {
+            this.node = node;
             this.distance = distance;
             this.errorRate = errorRate;
         }

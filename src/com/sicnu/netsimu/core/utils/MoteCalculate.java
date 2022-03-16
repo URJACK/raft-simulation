@@ -1,10 +1,10 @@
 package com.sicnu.netsimu.core.utils;
 
-import com.sicnu.netsimu.core.mote.Mote;
+import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.exception.ParseException;
 
 public class MoteCalculate {
-    public static float eulaDistance(Mote a, Mote b) {
+    public static float eulaDistance(Node a, Node b) {
         float ySpan = Math.abs(a.getY() - b.getY());
         float xSpan = Math.abs(a.getX() - b.getX());
         return (float) Math.sqrt(ySpan * ySpan + xSpan * xSpan);

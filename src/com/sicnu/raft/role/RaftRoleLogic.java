@@ -2,7 +2,7 @@ package com.sicnu.raft.role;
 
 import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.raft.command.RaftOpCommand;
-import com.sicnu.raft.mote.RaftMote;
+import com.sicnu.raft.node.RaftNode;
 import com.sicnu.raft.log.RaftLogTable;
 
 import java.util.List;
@@ -15,7 +15,7 @@ public abstract class RaftRoleLogic {
     /**
      * Raft节点引用
      */
-    protected RaftMote mote;
+    protected RaftNode mote;
     /**
      * 当前节点的角色
      */
@@ -48,7 +48,7 @@ public abstract class RaftRoleLogic {
      * @param mote    所属的节点引用
      * @param nodeNum Raft节点个数
      */
-    public RaftRoleLogic(RaftMote mote, int nodeNum) {
+    public RaftRoleLogic(RaftNode mote, int nodeNum) {
         this.mote = mote;
         this.NODE_NUM = nodeNum;
     }
@@ -84,7 +84,7 @@ public abstract class RaftRoleLogic {
      * @param key           操作键
      * @param value         操作值
      * @see RaftOpCommand
-     * @see RaftMote
+     * @see RaftNode
      * @see RaftRoleLogic
      */
     public abstract void logOperate(String operationType, String key, String value);
@@ -102,7 +102,7 @@ public abstract class RaftRoleLogic {
      * RaftRole -> RaftMote -> ...
      *
      * @return 当前节点的角色
-     * @see RaftMote
+     * @see RaftNode
      */
     public int getRole() {
         return role;

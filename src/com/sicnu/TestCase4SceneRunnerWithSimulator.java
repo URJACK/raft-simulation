@@ -6,7 +6,7 @@ import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 import com.sicnu.netsimu.ui.scene.LinearAddNodeScene;
 import com.sicnu.netsimu.ui.scene.Scene;
 import com.sicnu.raft.command.RaftCommandTranslator;
-import com.sicnu.raft.mote.RaftMote;
+import com.sicnu.raft.node.RaftNode;
 import com.sicnu.raft.ui.RaftCalculateInPostEventInterceptor;
 import com.sicnu.raft.ui.RaftCalculateInPreEventInterceptor;
 import com.sicnu.raft.ui.RaftSummarizer;
@@ -49,7 +49,7 @@ public class TestCase4SceneRunnerWithSimulator {
         Scene scene = new LinearAddNodeScene(filepath);
         String[] nodeParam = {String.valueOf(nodeNum)};
         scene.generateCommands(new LinearAddNodeScene.LinearConfig(0, 0, 10, 0, 500, 100,
-                RaftMote.class, nodeParam));
+                RaftNode.class, nodeParam));
         scene.output(false);
     }
 }

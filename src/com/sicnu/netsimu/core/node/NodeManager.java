@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.core.mote;
+package com.sicnu.netsimu.core.node;
 
 import com.sicnu.netsimu.core.NetSimulator;
 
@@ -11,16 +11,16 @@ import java.util.HashMap;
  * 节点管理器，下属于Simulator
  * 存储了节点的相关信息
  */
-public class MoteManager {
-    ArrayList<Mote> motes;
-    HashMap<Integer, Mote> moteRecorder;
+public class NodeManager {
+    ArrayList<Node> nodes;
+    HashMap<Integer, Node> moteRecorder;
     NetSimulator simulator;
 
     /**
      * @param simulator 仿真器对象引用
      */
-    public MoteManager(NetSimulator simulator) {
-        motes = new ArrayList<>();
+    public NodeManager(NetSimulator simulator) {
+        nodes = new ArrayList<>();
         moteRecorder = new HashMap<>();
         this.simulator = simulator;
     }
@@ -49,7 +49,7 @@ public class MoteManager {
      * @param args          额外参数列表
      * @return 成功添加的新节点（失败则为null）
      */
-    public Mote addMote(int nodeId, float x, float y, String nodeClassPath, String... args) {
+    public Node addMote(int nodeId, float x, float y, String nodeClassPath, String... args) {
         if (moteRecorder.containsKey(nodeId)) {
             //如果已经存在了这个节点
             return null;
@@ -59,11 +59,11 @@ public class MoteManager {
             Constructor[] declaredConstructors = nodeClass.getDeclaredConstructors();
             for (Constructor constructor : declaredConstructors) {
 //                System.out.println(constructor.getName());
-                Mote mote = (Mote) constructor.newInstance(simulator, nodeId, x, y, nodeClass, args);
+                Node node = (Node) constructor.newInstance(simulator, nodeId, x, y, nodeClass, args);
 //                NormalMote mote = new NormalMote(simulator, nodeId, x, y);
-                motes.add(mote);
-                moteRecorder.put(nodeId, mote);
-                return mote;
+                nodes.add(node);
+                moteRecorder.put(nodeId, node);
+                return node;
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -83,7 +83,7 @@ public class MoteManager {
      * @param nodeId 节点的id
      * @return 通过节点id获得的节点
      */
-    public Mote getMote(int nodeId) {
+    public Node getMote(int nodeId) {
         return moteRecorder.get(nodeId);
     }
 
@@ -92,8 +92,8 @@ public class MoteManager {
      *
      * @return 所有节点
      */
-    public ArrayList<Mote> getAllMotes() {
-        return motes;
+    public ArrayList<Node> getAllMotes() {
+        return nodes;
     }
 
     /**

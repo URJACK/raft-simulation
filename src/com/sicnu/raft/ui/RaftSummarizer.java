@@ -5,8 +5,8 @@ import com.sicnu.netsimu.core.command.Command;
 import com.sicnu.netsimu.core.event.CommandEvent;
 import com.sicnu.netsimu.core.event.Event;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
-import com.sicnu.netsimu.core.mote.Mote;
-import com.sicnu.netsimu.core.mote.MoteManager;
+import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.netsimu.core.node.NodeManager;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
 import com.sicnu.netsimu.ui.summary.IncrementalSummarizer;
 
@@ -14,7 +14,7 @@ import java.util.*;
 
 import com.sicnu.netsimu.core.net.TransmissionManager;
 import com.sicnu.raft.command.RaftOpCommand;
-import com.sicnu.raft.mote.RaftMote;
+import com.sicnu.raft.node.RaftNode;
 import com.sicnu.raft.role.BasicRaftRoleLogic;
 import com.sicnu.raft.role.RaftRoleLogic;
 import com.sicnu.raft.log.RaftLogTable;
@@ -33,7 +33,7 @@ import com.sicnu.raft.log.RaftLogTable;
  * <p>
  * 关于数据同步的耗时
  *
- * @see Mote
+ * @see Node
  * @see EnergyStatistician
  * @see TransmissionManager
  */
@@ -176,8 +176,8 @@ public class RaftSummarizer extends IncrementalSummarizer {
             }
         } else if (peekEvent instanceof TransmissionEvent) {
             TransmissionEvent event = (TransmissionEvent) peekEvent;
-            Mote receiver = event.getReceiver();
-            if (receiver instanceof RaftMote) {
+            Node receiver = event.getReceiver();
+            if (receiver instanceof RaftNode) {
                 //只有当信息的接受者是一个RaftMote的时候 才有可能会触发日志的改变
                 int moteId = receiver.getMoteId();
                 raftDataSyncVariable.raftNeedCheckQueue.addLast(moteId);
@@ -186,15 +186,15 @@ public class RaftSummarizer extends IncrementalSummarizer {
             //如果是一个选举事件 我们在其开始之前就进行处理
             BasicRaftRoleLogic.ElectionTimeoutEvent event = (BasicRaftRoleLogic.ElectionTimeoutEvent) peekEvent;
             //我们获取到选举事件对应的节点
-            RaftMote raftMote = (RaftMote) event.getSelfMote();
+            RaftNode raftNode = (RaftNode) event.getSelfNode();
             //我们对该节点
-            int candidateRole = raftMote.getRole();
+            int candidateRole = raftNode.getRole();
             if (candidateRole != RaftRoleLogic.ROLE_LEADER) {
                 //如果节点在选举结束的时候，仍未成为LEADER，就说明该次选举失败了
-                raftElectVariable.addElection(event.getTerm(), raftMote.getMoteId(), false);
+                raftElectVariable.addElection(event.getTerm(), raftNode.getMoteId(), false);
             } else {
                 //如果节点在选举结束的时候，成为了LEADER，就说明该次选举成功了
-                raftElectVariable.addElection(event.getTerm(), raftMote.getMoteId(), true);
+                raftElectVariable.addElection(event.getTerm(), raftNode.getMoteId(), true);
             }
         }
     }
@@ -216,15 +216,15 @@ public class RaftSummarizer extends IncrementalSummarizer {
         while (!raftDataSyncVariable.raftNeedCheckQueue.isEmpty()) {
             //首先从判定队列中 取出需要被判定的节点号
             Integer moteId = raftDataSyncVariable.raftNeedCheckQueue.pollFirst();
-            Mote mote = simulator.getMoteManager().getMote(moteId);
-            if (!(mote instanceof RaftMote)) {
+            Node node = simulator.getMoteManager().getMote(moteId);
+            if (!(node instanceof RaftNode)) {
                 new Exception("该节点不是RaftMote").printStackTrace();
                 return;
             }
             //我们对该节点的日志长度进行获取
-            RaftMote raftMote = (RaftMote) mote;
+            RaftNode raftNode = (RaftNode) node;
             //取得该节点的日志表结构
-            RaftLogTable table = raftMote.getLogTable();
+            RaftLogTable table = raftNode.getLogTable();
             int length = table.getLength();
             raftDataSyncVariable.refreshLogLengthWithId(moteId, length);
         }
@@ -234,17 +234,17 @@ public class RaftSummarizer extends IncrementalSummarizer {
      * 能耗统计过程
      */
     private void energyCalc() {
-        MoteManager moteManager = simulator.getMoteManager();
+        NodeManager nodeManager = simulator.getMoteManager();
         //为了获得每个节点的能耗数据，我们需要先对每个节点进行遍历
-        for (Mote mote : moteManager.getAllMotes()) {
+        for (Node node : nodeManager.getAllMotes()) {
             //每个节点的能耗存储在自身的 EnergyStatistician 中
-            EnergyStatistician energyStatistician = mote.getSingleMoteEnergyStatistician();
+            EnergyStatistician energyStatistician = node.getSingleMoteEnergyStatistician();
             //获得每个节点的能耗
             Float statisticianAllSummary = energyStatistician.getAllSummary();
             //清空这个时间点的能耗记录
             energyStatistician.clear();
             //将这次到上次调用之间时段 “时段能耗数据” 进行统计
-            List<Float> list = energyCalcMap.computeIfAbsent(mote.getMoteId(), k -> new LinkedList<>());
+            List<Float> list = energyCalcMap.computeIfAbsent(node.getMoteId(), k -> new LinkedList<>());
             //将“时段能耗数据”塞入对应节点的列表中
             list.add(statisticianAllSummary);
         }
@@ -343,7 +343,7 @@ public class RaftSummarizer extends IncrementalSummarizer {
          *
          * @param moteId    节点id
          * @param newLength 新的日志长度，其数值上与lastLogIndex相同
-         * @see RaftMote
+         * @see RaftNode
          * @see RaftLogTable
          */
         public void refreshLogLengthWithId(Integer moteId, int newLength) {
