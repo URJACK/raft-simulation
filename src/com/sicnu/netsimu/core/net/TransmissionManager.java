@@ -101,7 +101,7 @@ public class TransmissionManager {
      * @return
      */
     public List<Neighbor> getNeighbors(Node node) {
-        return table.get(node.getMoteId());
+        return table.get(node.getNodeId());
     }
 
     /**
@@ -126,8 +126,8 @@ public class TransmissionManager {
         Node nodeA = nodeManager.getMote(nodeId);
         for (int i = 0; i < nodes.size(); i++) {
             Node nodeB = nodes.get(i);
-            LinkedList<Neighbor> neighborsOfB = table.computeIfAbsent(nodeB.getMoteId(), k -> new LinkedList<>());
-            if (nodeB.getMoteId() == (nodeId)) {
+            LinkedList<Neighbor> neighborsOfB = table.computeIfAbsent(nodeB.getNodeId(), k -> new LinkedList<>());
+            if (nodeB.getNodeId() == (nodeId)) {
                 //不计算自己和自己
                 continue;
             }
@@ -161,18 +161,18 @@ public class TransmissionManager {
             //得到的随机值
             float randomVote = NetSimulationRandom.nextFloat();
             float errorRate = neighbor.getErrorRate();
-            TransmissionEvent event = new TransmissionEvent(calcTransmissionTime(distance) + simulator.getTime(), senderNode, receiverNode, packet);
+            TransmissionEvent event = new TransmissionEvent(calcTransmissionTime(distance) + simulator.getTime(), receiverNode, packet);
             if (randomVote > errorRate) {
                 //获取到neighbor指向的mote本身
                 //无论该节点的ip和端口信息是否满足 数据包的目的地要求 我们都将其进行传输
                 simulator.getEventManager().pushEvent(event);
                 // 发送数据包成功后 进行数据的统计
-                successSendStatistician.addValue(String.valueOf(senderNode.getMoteId()), 1);
-                successReceiveStatistician.addValue(String.valueOf(receiverNode.getMoteId()), 1);
+                successSendStatistician.addValue(String.valueOf(senderNode.getNodeId()), 1);
+                successReceiveStatistician.addValue(String.valueOf(receiverNode.getNodeId()), 1);
             } else {
                 // 发送数据包失败后 进行数据的统计
-                failedSendStatistician.addValue(String.valueOf(senderNode.getMoteId()), 1);
-                failedReceiveStatistician.addValue(String.valueOf(receiverNode.getMoteId()), 1);
+                failedSendStatistician.addValue(String.valueOf(senderNode.getNodeId()), 1);
+                failedReceiveStatistician.addValue(String.valueOf(receiverNode.getNodeId()), 1);
             }
         }
     }

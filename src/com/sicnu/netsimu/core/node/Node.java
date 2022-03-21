@@ -1,6 +1,9 @@
 package com.sicnu.netsimu.core.node;
 
 import com.sicnu.netsimu.core.net.NetStack;
+import com.sicnu.netsimu.core.net.channel.Channel;
+import com.sicnu.netsimu.core.net.driver.Driver;
+import com.sicnu.netsimu.core.net.driver.IEEE_802_11_B_Driver;
 import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
@@ -21,6 +24,7 @@ public abstract class Node {
     protected int moteId;
     protected float x;
     protected float y;
+    protected Driver driver;
     /**
      * 网络栈
      */
@@ -49,6 +53,10 @@ public abstract class Node {
         this.moteId = moteId;
         this.x = x;
         this.y = y;
+        // 每个节点持有的一个信道对象
+        Channel channel = new Channel(simulator);
+        this.driver = new IEEE_802_11_B_Driver(simulator, this, channel, 10, 100);
+        channel.setDriver(this.driver);
         energyStatistician = new EnergyStatistician(this);
         this.moteClass = moteClass;
     }
@@ -85,8 +93,11 @@ public abstract class Node {
      */
     @EnergyCost(30f)
     public final void netSend(byte[] packet) {
+        /* send packet without MacLayer
         TransmissionManager transmissionManager = simulator.getTransmissionManager();
         transmissionManager.moteSendPacket(this, packet);
+         */
+        driver.sendData(packet);
     }
 
 
@@ -163,7 +174,7 @@ public abstract class Node {
         return simulator;
     }
 
-    public int getMoteId() {
+    public int getNodeId() {
         return moteId;
     }
 
@@ -197,5 +208,9 @@ public abstract class Node {
      */
     public NetStack getNetStack() {
         return netStack;
+    }
+
+    public Driver getDriver() {
+        return driver;
     }
 }

@@ -60,6 +60,9 @@ public class EventManager {
     public void exec() {
         Event ev = queue.poll();
         assert ev != null;
+        if (ev.isAbandoned()) {
+            return;
+        }
         simulator.setTime(ev.getTriggerTime());
         ev.work();
         //对带loop的TimeoutEvent事件做循环处理

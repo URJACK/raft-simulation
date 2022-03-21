@@ -179,7 +179,7 @@ public class RaftSummarizer extends IncrementalSummarizer {
             Node receiver = event.getReceiver();
             if (receiver instanceof RaftNode) {
                 //只有当信息的接受者是一个RaftMote的时候 才有可能会触发日志的改变
-                int moteId = receiver.getMoteId();
+                int moteId = receiver.getNodeId();
                 raftDataSyncVariable.raftNeedCheckQueue.addLast(moteId);
             }
         } else if (peekEvent instanceof BasicRaftRoleLogic.ElectionTimeoutEvent) {
@@ -191,10 +191,10 @@ public class RaftSummarizer extends IncrementalSummarizer {
             int candidateRole = raftNode.getRole();
             if (candidateRole != RaftRoleLogic.ROLE_LEADER) {
                 //如果节点在选举结束的时候，仍未成为LEADER，就说明该次选举失败了
-                raftElectVariable.addElection(event.getTerm(), raftNode.getMoteId(), false);
+                raftElectVariable.addElection(event.getTerm(), raftNode.getNodeId(), false);
             } else {
                 //如果节点在选举结束的时候，成为了LEADER，就说明该次选举成功了
-                raftElectVariable.addElection(event.getTerm(), raftNode.getMoteId(), true);
+                raftElectVariable.addElection(event.getTerm(), raftNode.getNodeId(), true);
             }
         }
     }
@@ -244,7 +244,7 @@ public class RaftSummarizer extends IncrementalSummarizer {
             //清空这个时间点的能耗记录
             energyStatistician.clear();
             //将这次到上次调用之间时段 “时段能耗数据” 进行统计
-            List<Float> list = energyCalcMap.computeIfAbsent(node.getMoteId(), k -> new LinkedList<>());
+            List<Float> list = energyCalcMap.computeIfAbsent(node.getNodeId(), k -> new LinkedList<>());
             //将“时段能耗数据”塞入对应节点的列表中
             list.add(statisticianAllSummary);
         }

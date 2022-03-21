@@ -10,6 +10,7 @@ import lombok.Data;
 public abstract class Event implements Comparable<Event> {
     //触发时间
     protected long triggerTime;
+    protected boolean abandoned = false;
 
     public Event() {
     }
@@ -19,6 +20,14 @@ public abstract class Event implements Comparable<Event> {
      */
     public Event(long triggerTime) {
         this.triggerTime = triggerTime;
+    }
+
+    public void setAbandoned(boolean abandoned) {
+        this.abandoned = abandoned;
+    }
+
+    public boolean isAbandoned() {
+        return abandoned;
     }
 
     /**

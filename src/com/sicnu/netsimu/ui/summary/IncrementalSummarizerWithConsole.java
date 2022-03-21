@@ -69,7 +69,7 @@ public class IncrementalSummarizerWithConsole extends IncrementalSummarizer {
             //清空这个时间点的能耗记录
             energyStatistician.clear();
             //将这次到上次调用之间时段 “时段能耗数据” 进行统计
-            List<Float> list = energyCalcMap.computeIfAbsent(node.getMoteId(), k -> new LinkedList<>());
+            List<Float> list = energyCalcMap.computeIfAbsent(node.getNodeId(), k -> new LinkedList<>());
             //将“时段能耗数据”塞入对应节点的列表中
             list.add(statisticianAllSummary);
         }

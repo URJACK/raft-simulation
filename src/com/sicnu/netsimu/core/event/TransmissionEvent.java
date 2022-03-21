@@ -10,10 +10,10 @@ import lombok.Data;
  */
 @Data
 public class TransmissionEvent extends Event {
-    /**
-     * 数据包的发送者
-     */
-    Node sender;
+//    /**
+//     * 数据包的发送者
+//     */
+//    Node sender;
     /**
      * 数据包的接受者
      */
@@ -28,9 +28,8 @@ public class TransmissionEvent extends Event {
      * @param receiver    接收的节点（引用对象）
      * @param packet      发送的数据包
      */
-    public TransmissionEvent(long triggerTime, Node sender, Node receiver, byte[] packet) {
+    public TransmissionEvent(long triggerTime, Node receiver, byte[] packet) {
         super(triggerTime);
-        this.sender = sender;
         this.receiver = receiver;
         this.packet = packet;
     }

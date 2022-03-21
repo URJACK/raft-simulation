@@ -106,7 +106,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
         // 角色切换为 Candidate
         role = ROLE_CANDIDATE;
         // 投给自己
-        constantVariable.votedFor = mote.getMoteId();
+        constantVariable.votedFor = mote.getNodeId();
         candidateVariable.gotVoteNum++;
         // 检查仅投给自己是否可以成为Leader
         if (candidateVariable.hasGotEnoughVoteToBeLeader()) {
@@ -114,7 +114,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
             return;
         }
         // 如果仅投给自己无法成为Leader，那么开始广播这条RPC_ELECT消息
-        raftSender.broadCast(new ElectionRPC(RPC.RPC_ELECT, constantVariable.currentTerm, mote.getMoteId(),
+        raftSender.broadCast(new ElectionRPC(RPC.RPC_ELECT, constantVariable.currentTerm, mote.getNodeId(),
                 raftLogTable.getLastLogIndex(), raftLogTable.getLastLogTerm()));
         // 设置一个选举动作的触发时间
         ElectionTimeoutEvent electionTimeoutEvent = new ElectionTimeoutEvent(MAX_CANDIDATE_HOLD_ON_SPAN_TIME,
@@ -140,7 +140,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
         // 获得自己当前最新的日志信息
         int lastLogIndex = raftLogTable.getLastLogIndex();
         for (int id = 1; id <= NODE_NUM; id++) {
-            if (id == mote.getMoteId()) {
+            if (id == mote.getNodeId()) {
                 // 不会发送给自己
                 continue;
             }
@@ -270,7 +270,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
             就说明Leader记录自己的nextIndex发生了不一致 应当回复 false
              */
             HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
-                    constantVariable.currentTerm, 0, 0, mote.getMoteId());
+                    constantVariable.currentTerm, 0, 0, mote.getNodeId());
             raftSender.uniCast(beatsRPC.getSenderId(), respRPC);
         } else {
             /*
@@ -292,7 +292,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                 raftLogTable.deleteAt(beatsRPC.getPrevIndex());
                 // 仍需要给予false的回复
                 HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
-                        constantVariable.currentTerm, 0, 0, mote.getMoteId());
+                        constantVariable.currentTerm, 0, 0, mote.getNodeId());
                 raftSender.uniCast(beatsRPC.getSenderId(), respRPC);
             } else {
                 /*
@@ -312,7 +312,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                 raftLogTable.tryToSetCommitIndex(beatsRPC.getCommitIndex());
                 // 给予回复
                 HeartBeatsRespRPC respRPC = new HeartBeatsRespRPC(RPC.RPC_HEARTBEATS_RESP,
-                        constantVariable.currentTerm, 1, raftLogTable.getLastLogIndex(), mote.getMoteId());
+                        constantVariable.currentTerm, 1, raftLogTable.getLastLogIndex(), mote.getNodeId());
                 raftSender.uniCast(beatsRPC.getSenderId(), respRPC);
             }
         }
@@ -389,7 +389,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                 constantVariable.TO_FOLLOWER(rpc.getTerm(), rpc);
                 // 回发选票
                 ElectionRespRPC respRpc = new ElectionRespRPC(RPC.RPC_ELECT_RESP,
-                        constantVariable.currentTerm, 1, mote.getMoteId());
+                        constantVariable.currentTerm, 1, mote.getNodeId());
                 raftSender.uniCast(rpc.getSenderId(), respRpc);
                 // 有效操作后 重置一下动作时间
                 constantVariable.refreshElectionActionTime();
@@ -399,7 +399,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
         } else {
             //针对该选票进行拒绝
             ElectionRespRPC respRPC = new ElectionRespRPC(RPC.RPC_ELECT_RESP,
-                    constantVariable.currentTerm, 0, mote.getMoteId());
+                    constantVariable.currentTerm, 0, mote.getNodeId());
             raftSender.uniCast(rpc.getSenderId(), respRPC);
         }
     }
@@ -601,7 +601,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                 进而影响 nextIndexes 和 matchIndexes 与
                 */
                 HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
-                        constantVariable.currentTerm, mote.getMoteId(),
+                        constantVariable.currentTerm, mote.getNodeId(),
                         prevIndex, prevTerm, commitIndex, null);
                 raftSender.uniCast(moteId, rpc);
             } else {
@@ -621,13 +621,13 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                      */
                     RaftLogItem item = raftLogTable.getLogByIndex(nextIndex);
                     HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
-                            constantVariable.currentTerm, mote.getMoteId(),
+                            constantVariable.currentTerm, mote.getNodeId(),
                             prevIndex, prevTerm, commitIndex, item);
                     raftSender.uniCast(moteId, rpc);
                 } else {
                     // 说明目标与我们的日志已经同步了，无需再传输新的数据
                     HeartBeatsRPC rpc = new HeartBeatsRPC(RPC.RPC_HEARTBEATS,
-                            constantVariable.currentTerm, mote.getMoteId(),
+                            constantVariable.currentTerm, mote.getNodeId(),
                             prevIndex, prevTerm, commitIndex, null);
                     raftSender.uniCast(moteId, rpc);
                 }
@@ -654,7 +654,7 @@ public class BasicRaftRoleLogic extends RaftRoleLogic {
                 this.commitIndex = commitIndex;
                 this.visited = new boolean[n + 1];
                 this.visitCount = 1;
-                this.visited[mote.getMoteId()] = true;
+                this.visited[mote.getNodeId()] = true;
             }
 
             /**

@@ -28,7 +28,7 @@ public class BasicTotalSummarizer extends Summarizer {
         ArrayList<Node> allNodes = nodeManager.getAllMotes();
         for (Node node : allNodes) {
             EnergyStatistician statistician = node.getSingleMoteEnergyStatistician();
-            System.out.println(node.getMoteId() + " : " + statistician.getAllSummary());
+            System.out.println(node.getNodeId() + " : " + statistician.getAllSummary());
         }
     }
 

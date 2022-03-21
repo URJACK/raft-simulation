@@ -1,4 +1,4 @@
-package com.sicnu.testpk;
+package com.test.testpk;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
