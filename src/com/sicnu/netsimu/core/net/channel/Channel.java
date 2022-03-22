@@ -84,7 +84,7 @@ public class Channel {
             if (driver.isMonitoring()) {
                 // means this is from lazy to busy
 //                driver.changeBusy();
-                driver.afterIdleSleepFunctionTrigger(false);
+                driver.triggerChangeBusy();
                 if (sleepSignal != null) {
                     /*
                      while the channel become busy from idle,
@@ -135,7 +135,7 @@ public class Channel {
             // if this is a virtual event trigger
             sleepSignal = null;
 //            driver.awake();
-            driver.afterIdleSleepFunctionTrigger(true);
+            driver.triggerAwake();
         }
     }
 

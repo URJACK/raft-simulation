@@ -34,12 +34,12 @@ public class IEEE_802_11_B_Driver extends Driver {
         // this will not trigger the:  role = DriverRole.CACHING;
         // because we want to realize the buffer mechanism.
         sendingLogic.pushData(data);
-        if (sendingLogic.getBufferSize() > 2) {
-            // if it has existed the sending data before, it won't do anything
-            return;
-        } else {
-            // if there's only one packet waiting to send.
-            actionTrySend();
+        switch (role) {
+            case FREE ->
+                    // if there's only one packet waiting to send.
+                    actionTrySend();
+            default -> {
+            }
         }
     }
 
@@ -105,16 +105,8 @@ public class IEEE_802_11_B_Driver extends Driver {
         }
     }
 
-    /**
-     * A node use sleep() to sleep X nanoseconds,
-     * and then after X nanoseconds, it will call the awake().
-     * <p>
-     * in code's calling, it should be called by afterIdleSleepFunctionTrigger()
-     *
-     * @see Driver#afterIdleSleepFunctionTrigger(boolean)
-     */
     @Override
-    protected void triggerAwake() {
+    protected void awake() {
         switch (role) {
             case WAIT_IFS -> {
                 // this will trigger the sending
@@ -151,18 +143,8 @@ public class IEEE_802_11_B_Driver extends Driver {
         }
     }
 
-    /**
-     * if the driver is listening the channel (monitorStatus == true),
-     * <p>
-     * while the channel from Idle to Busy,
-     * this function will be triggered!
-     * <p>
-     * in code's calling, it should be called by afterIdleSleepFunctionTrigger()
-     *
-     * @see Driver#afterIdleSleepFunctionTrigger(boolean)
-     */
     @Override
-    protected void triggerChangeBusy() {
+    protected void changeBusy() {
         // if in the following status, shall we be in the ACTION_SENDING ?
         if (sendingLogic.isSending()) {
             // if the driver is sending, it will not trigger anything
@@ -302,12 +284,12 @@ public class IEEE_802_11_B_Driver extends Driver {
             sendingBuffer.addLast(data);
         }
 
-        public int getBufferSize() {
-            return sendingBuffer.size();
-        }
-
         public byte[] poll() {
             return sendingBuffer.poll();
+        }
+
+        public int getBufferSize() {
+            return sendingBuffer.size();
         }
 
         public void activateSending() {

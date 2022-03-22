@@ -119,7 +119,7 @@ public abstract class Driver {
             idleSleepStatus = true;
             channel.waitInIdle(time);
         } else {
-            new RuntimeException("can't sleep one more time while in sleeping").printStackTrace();
+            new RuntimeException("can't sleep one more time while in sleeping " + node.getNodeId()).printStackTrace();
         }
     }
 
@@ -129,26 +129,6 @@ public abstract class Driver {
             channel.waitWhatever(time);
         } else {
             new RuntimeException("can't sleep one more time while in sleeping(sending action)").printStackTrace();
-        }
-    }
-
-    /**
-     * this is the function trigger,
-     * why should we use this one ? why don't we just use awake() or changeBusy()?
-     * <p>
-     * these two functions both need to clear a flag variable called "idleSleepStatus".
-     * we don't want to make user know too many details about the Driver.
-     *
-     * @param isTriggerAwake if this is true, it will trigger awake(), or it will trigger changeBusy()
-     * @see Driver#triggerAwake()
-     * @see Driver#triggerChangeBusy()
-     */
-    public final void afterIdleSleepFunctionTrigger(boolean isTriggerAwake) {
-        idleSleepStatus = false;
-        if (isTriggerAwake) {
-            triggerAwake();
-        } else {
-            triggerChangeBusy();
         }
     }
 
@@ -175,10 +155,13 @@ public abstract class Driver {
      * and then after X nanoseconds, it will call the awake().
      * <p>
      * in code's calling, it should be called by afterIdleSleepFunctionTrigger()
-     *
-     * @see Driver#afterIdleSleepFunctionTrigger(boolean)
      */
-    protected abstract void triggerAwake();
+    public final void triggerAwake() {
+        idleSleepStatus = false;
+        awake();
+    }
+
+    protected abstract void awake();
 
     /**
      * if the driver is listening the channel (monitorStatus == true),
@@ -187,10 +170,13 @@ public abstract class Driver {
      * this function will be triggered!
      * <p>
      * in code's calling, it should be called by afterIdleSleepFunctionTrigger()
-     *
-     * @see Driver#afterIdleSleepFunctionTrigger(boolean)
      */
-    protected abstract void triggerChangeBusy();
+    public final void triggerChangeBusy() {
+        idleSleepStatus = false;
+        changeBusy();
+    }
+
+    protected abstract void changeBusy();
 
     /**
      * if the driver is listening the channel (monitorStatus == true),
