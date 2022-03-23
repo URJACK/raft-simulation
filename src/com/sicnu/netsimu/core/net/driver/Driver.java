@@ -4,6 +4,7 @@ import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.net.channel.Channel;
 import com.sicnu.netsimu.core.net.channel.ChannelManager;
 import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 
 import java.util.List;
 
@@ -24,11 +25,13 @@ public abstract class Driver {
     /**
      * the transmitted speed of the Driver
      */
-    private final float bitSpeed;
+    protected float dataBitRate;
     /**
      * 传输
      */
-    private final float transmitBaseCost;
+    protected float physicalTimeCost;
+
+    static final float physicalBeta = (float) 0;
 
     /**
      * is in Idle Sleep Status?
@@ -36,12 +39,21 @@ public abstract class Driver {
      */
     private boolean idleSleepStatus;
 
-    public Driver(NetSimulator simulator, Node node, Channel channel, float bitSpeed, float transmitBaseCost) {
+    /**
+     * the constructor of the Driver
+     *
+     * @param simulator        the citation of the simulator
+     * @param node             the node which the driver belongs to
+     * @param channel          the channel which the driver is linked to
+     * @param dataBitRate      the dataBitRate, in per microseconds
+     * @param physicalTimeCost the physical transmission time cost, in microseconds
+     */
+    public Driver(NetSimulator simulator, Node node, Channel channel, float dataBitRate, float physicalTimeCost) {
         this.channelManager = simulator.getChannelManager();
         this.node = node;
         this.channel = channel;
-        this.bitSpeed = bitSpeed;
-        this.transmitBaseCost = transmitBaseCost;
+        this.dataBitRate = dataBitRate;
+        this.physicalTimeCost = physicalTimeCost;
     }
 
     // API //
@@ -67,7 +79,9 @@ public abstract class Driver {
      * @param data the data needed transmit
      */
     void transmit(byte[] data) {
-        int costTime = (int) (transmitBaseCost + data.length / bitSpeed);
+//        float rand = NetSimulationRandom.nextFloat() * physicalBeta;
+//        int costTime = (int) (physicalTimeCost * (1 + rand) + data.length / dataBitRate);
+        int costTime = (int) (physicalTimeCost + data.length / dataBitRate);
         List<Channel> connectedChannels = channelManager.getConnectedChannels(node);
         for (Channel connectedChannel : connectedChannels) {
             connectedChannel.pushSignal(costTime, data);

@@ -3,8 +3,8 @@ package com.sicnu.netsimu.core.net.driver;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
 import com.sicnu.netsimu.core.net.channel.Channel;
-import com.sicnu.netsimu.core.net.channel.ChannelManager;
 import com.sicnu.netsimu.core.node.Node;
+import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -18,10 +18,21 @@ public class IEEE_802_11_B_Driver extends Driver {
     SendingLogic sendingLogic;
     BackoffLogic backoffLogic;
 
-    public IEEE_802_11_B_Driver(NetSimulator simulator, Node node, Channel channel, float bitSpeed, float transmitBaseCost) {
-        super(simulator, node, channel, bitSpeed, transmitBaseCost);
+    /**
+     * the constructor of the Driver
+     *
+     * @param simulator        the citation of the simulator
+     * @param node             the node which the driver belongs to
+     * @param channel          the channel which the driver is linked to
+     * @param dataBitRate      the dataBitRate, in per microseconds
+     * @param physicalTimeCost the physical transmission time cost, in microseconds
+     */
+    public IEEE_802_11_B_Driver(NetSimulator simulator, Node node, Channel channel, float dataBitRate, float physicalTimeCost) {
+        super(simulator, node, channel, dataBitRate, physicalTimeCost);
         sendingLogic = new SendingLogic();
         backoffLogic = new BackoffLogic();
+        // turn on the switch, to allow the changeBusy & changeIdle worked.
+        turnMonitor(true);
     }
 
     /**
@@ -54,8 +65,6 @@ public class IEEE_802_11_B_Driver extends Driver {
     private void actionTrySend() {
         // clear the backoff related variables
         backoffLogic.clear();
-        // turn on the switch, to allow the changeBusy & changeIdle worked.
-        turnMonitor(true);
 //        role = DriverRole.CACHING;
         if (channel.isBusy()) {
             role = DriverRole.WAIT_IDLE;
@@ -79,7 +88,7 @@ public class IEEE_802_11_B_Driver extends Driver {
      */
     private void actionSending() {
         role = DriverRole.CACHING;
-        byte[] packet = sendingLogic.poll();
+        byte[] packet = sendingLogic.peek();
         sendingLogic.activateSending();
         // sending the packet
         transmit(packet);
@@ -98,6 +107,8 @@ public class IEEE_802_11_B_Driver extends Driver {
          it won't trigger this status,
          so don't need sendingLogic.clearActivateSending();
          */
+        node.netSendResult(sendingLogic.peek(), false);
+        sendingLogic.poll();
         if (sendingLogic.getBufferSize() == 0) {
             role = DriverRole.FREE;
         } else {
@@ -134,6 +145,8 @@ public class IEEE_802_11_B_Driver extends Driver {
             case CACHING -> {
                 // actionSending() will use sendingLogic.activateSending()
                 sendingLogic.clearActivateSending();
+                node.netSendResult(sendingLogic.peek(), true);
+                sendingLogic.poll();
                 if (sendingLogic.getBufferSize() == 0) {
                     role = DriverRole.FREE;
                 } else {
@@ -212,7 +225,7 @@ public class IEEE_802_11_B_Driver extends Driver {
     }
 
     private class BackoffLogic {
-        public static final int OVER_FAIL_TIMES = 6;
+        public static final int OVER_FAIL_TIMES = 7;
 
         int backoffLeft;
         int backoffCount;
@@ -231,18 +244,23 @@ public class IEEE_802_11_B_Driver extends Driver {
          * call this function while in (CACHING \ WAIT_IFS);
          */
         public void detectBusyAndBackOff() {
-            backoffCount++;
             backoffLeft = calculateTime(backoffCount);
+            backoffCount++;
+//            System.out.println("DEBUG BACKOFF count:" + backoffCount + " left:" + backoffLeft + " nodeId:" + node.getNodeId());
         }
 
         /**
          * calculate how much time the node need to backoff
+         * time from 31 -> 1023
+         * 2^5          ->  2^10
+         * t = 0        ->  t = 5
          *
          * @param backoffCount have already done how many times backoff
          * @return the time the node need to backoff
          */
         private int calculateTime(int backoffCount) {
-            return 100;
+            int CW = (int) Math.pow(2, Math.min(backoffCount, 5) + 5) - 1;
+            return (int) (CW * NetSimulationRandom.nextFloat() * SLOT_TIME);
         }
 
         public boolean isInBackOff() {
@@ -262,7 +280,7 @@ public class IEEE_802_11_B_Driver extends Driver {
         }
 
         public boolean overFailed() {
-            return backoffCount >= OVER_FAIL_TIMES;
+            return backoffCount > OVER_FAIL_TIMES;
         }
     }
 
@@ -284,8 +302,12 @@ public class IEEE_802_11_B_Driver extends Driver {
             sendingBuffer.addLast(data);
         }
 
+        public byte[] peek() {
+            return sendingBuffer.peekFirst();
+        }
+
         public byte[] poll() {
-            return sendingBuffer.poll();
+            return sendingBuffer.pollFirst();
         }
 
         public int getBufferSize() {

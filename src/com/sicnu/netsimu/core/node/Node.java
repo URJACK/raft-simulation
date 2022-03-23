@@ -55,7 +55,8 @@ public abstract class Node {
         this.y = y;
         // 每个节点持有的一个信道对象
         Channel channel = new Channel(simulator);
-        this.driver = new IEEE_802_11_B_Driver(simulator, this, channel, 10, 100);
+        // 其中 t_{phys} = 192_{us} ，而 r_{data} = 11 Mbps = 11 000 000 b p s == 11 b p us。
+        this.driver = new IEEE_802_11_B_Driver(simulator, this, channel, 11, 1);
         channel.setDriver(this.driver);
         energyStatistician = new EnergyStatistician(this);
         this.moteClass = moteClass;
@@ -99,6 +100,14 @@ public abstract class Node {
          */
         driver.sendData(packet);
     }
+
+    /**
+     * 以太网发送结果回调函数
+     *
+     * @param data   数据包
+     * @param result 发送结果
+     */
+    public abstract void netSendResult(byte[] data, boolean result);
 
 
     /**
@@ -213,4 +222,5 @@ public abstract class Node {
     public Driver getDriver() {
         return driver;
     }
+
 }

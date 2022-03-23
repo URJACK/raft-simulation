@@ -21,6 +21,8 @@ public class TestNodeA extends Node {
     public static final byte[] MAC_PREFIX = {(byte) 0xEE, (byte) 0xEE, (byte) 0xEE,
             (byte) 0xEE, (byte) 0xEE};
 
+    private int sendCount;
+
     /**
      * @param simulator 模拟器对象引用
      * @param moteId    节点的id
@@ -29,6 +31,7 @@ public class TestNodeA extends Node {
      */
     public TestNodeA(NetSimulator simulator, int moteId, float x, float y, Class moteClass, String... args) {
         super(simulator, moteId, x, y, moteClass);
+        this.sendCount = 0;
         try {
             byte[] selfMacAddress = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, moteId);
             equipNetStack((Object) selfMacAddress);
@@ -49,9 +52,12 @@ public class TestNodeA extends Node {
 //                byte[] dstMac = BasicMACLayer.BROAD_CAST;
                 byte[] dstMac = new byte[0];
                 try {
+                    if (getNodeId() == 1) {
+                        return;
+                    }
                     byte[] packet;
                     dstMac = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, 1);
-                    packet = stack.macSendingPacket(("I'm " + moteId).getBytes(), dstMac);
+                    packet = stack.macSendingPacket(("I'm " + moteId + " seq:" + sendCount++ + " time:" + simulator.getTime()).getBytes(), dstMac);
                     netSend(packet);
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -70,7 +76,7 @@ public class TestNodeA extends Node {
             return;
         }
 //        call("print", new String(netFields.get(1).value()));
-        System.out.println(new String(netFields.get(1).value()));
+        System.out.println(new String(netFields.get(1).value()) + " " + simulator.getTime());
     }
 
     /**
@@ -95,5 +101,18 @@ public class TestNodeA extends Node {
             return;
         }
         this.netStack = new BasicNetStack(macAddress);
+    }
+
+    /**
+     * 以太网发送结果回调函数
+     *
+     * @param data   数据包
+     * @param result 发送结果
+     */
+    @Override
+    public void netSendResult(byte[] data, boolean result) {
+        if (!result) {
+            System.out.println("node:" + getNodeId() + " sending .. failed");
+        }
     }
 }

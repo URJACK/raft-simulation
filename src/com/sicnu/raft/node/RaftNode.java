@@ -104,6 +104,17 @@ public class RaftNode extends Node {
     }
 
     /**
+     * 以太网发送结果回调函数
+     *
+     * @param data   数据包
+     * @param result 发送结果
+     */
+    @Override
+    public void netSendResult(byte[] data, boolean result) {
+        System.out.println("sending " + data + " " + result);
+    }
+
+    /**
      * @param packet 接受到的数据包
      */
     @Override
