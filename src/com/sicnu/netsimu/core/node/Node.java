@@ -2,15 +2,14 @@ package com.sicnu.netsimu.core.node;
 
 import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.net.channel.Channel;
-import com.sicnu.netsimu.core.net.driver.Driver;
-import com.sicnu.netsimu.core.net.driver.IEEE_802_11_B_Driver;
+import com.sicnu.netsimu.core.net.mac.driver.Driver;
+import com.sicnu.netsimu.core.net.mac.driver.IEEE_802_11_B_Driver;
 import com.sicnu.netsimu.core.statis.EnergyCost;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
 import com.sicnu.netsimu.core.statis.EnergyStatistician;
 import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 import com.sicnu.netsimu.ui.InfoOutputManager;
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.net.TransmissionManager;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

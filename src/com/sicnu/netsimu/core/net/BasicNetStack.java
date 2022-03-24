@@ -27,7 +27,7 @@ public class BasicNetStack extends NetStack {
     public BasicNetStack(byte[] macAddress) {
         macLayer = new BasicMACLayer(macAddress);
         ipLayer = new BasicIPLayer();
-        stackHeaderLength = macLayer.getHeaderLength() + ipLayer.getHeaderLength();
+        stackHeaderLength = BasicMACLayer.Header.length + BasicIPLayer.Header.length;
     }
 
     /**
@@ -68,11 +68,14 @@ public class BasicNetStack extends NetStack {
             new ParseException("数据包字段数不匹配").printStackTrace();
             return null;
         }
-        byte[] macHeaderBytes = new byte[12];
-        int valueLength = packet.length - 12;
+        // mac层头信息的对应数组
+        byte[] macHeaderBytes = new byte[BasicMACLayer.Header.length];
+        // 开除mac层头信息后的信息长度，并以该长度创建对应数组
+        int valueLength = packet.length - BasicMACLayer.Header.length;
         byte[] value = new byte[valueLength];
-        System.arraycopy(packet, 0, macHeaderBytes, 0, 12);
-        System.arraycopy(packet, 12, value, 0, valueLength);
+        // 将内容分别塞入这些部分
+        System.arraycopy(packet, 0, macHeaderBytes, 0, BasicMACLayer.Header.length);
+        System.arraycopy(packet, BasicMACLayer.Header.length, value, 0, valueLength);
         try {
             ArrayList<NetField> ans = new ArrayList<>(2);
             if (!macLayer.validate(macHeaderBytes)) {

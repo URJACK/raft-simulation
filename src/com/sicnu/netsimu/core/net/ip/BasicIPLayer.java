@@ -45,10 +45,6 @@ public class BasicIPLayer extends NetLayer {
         return false;
     }
 
-    @Override
-    public int getHeaderLength() {
-        return 0;
-    }
 
     /**
      * 设置Ip层的网络地址
@@ -66,5 +62,9 @@ public class BasicIPLayer extends NetLayer {
      */
     public byte[] getIpSourceAddress() {
         return ipAddress;
+    }
+
+    public static class Header{
+        public static final int length = 0;
     }
 }

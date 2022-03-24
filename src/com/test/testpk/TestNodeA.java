@@ -57,7 +57,7 @@ public class TestNodeA extends Node {
                     }
                     byte[] packet;
                     dstMac = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, 1);
-                    packet = stack.macSendingPacket(("I'm " + moteId + " seq:" + sendCount++ + " time:" + simulator.getTime()).getBytes(), dstMac);
+                    packet = stack.generateMacSendingPacket(("I'm " + moteId + " seq:" + sendCount++ + " time:" + simulator.getTime()).getBytes(), dstMac);
                     netSend(packet);
                 } catch (ParseException e) {
                     e.printStackTrace();

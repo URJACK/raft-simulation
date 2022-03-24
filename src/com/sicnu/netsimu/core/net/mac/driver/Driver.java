@@ -1,10 +1,9 @@
-package com.sicnu.netsimu.core.net.driver;
+package com.sicnu.netsimu.core.net.mac.driver;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.net.channel.Channel;
 import com.sicnu.netsimu.core.net.channel.ChannelManager;
 import com.sicnu.netsimu.core.node.Node;
-import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 
 import java.util.List;
 

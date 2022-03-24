@@ -57,7 +57,7 @@ public abstract class NetStack {
      */
     public abstract void setInfo(String key, Object value) throws ParseException;
 
-    public byte[] macSendingPacket(byte[] data, byte[] dstMac) throws ParseException {
+    public byte[] generateMacSendingPacket(byte[] data, byte[] dstMac) throws ParseException {
         BasicMACLayer.Header header = null;
         header = new BasicMACLayer.Header((byte[]) getInfo("mac"), dstMac);
         return convert(data, header);

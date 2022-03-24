@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.core.net.driver;
+package com.sicnu.netsimu.core.net.mac.driver;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TransmissionEvent;

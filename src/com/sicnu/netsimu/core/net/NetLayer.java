@@ -27,11 +27,4 @@ public abstract class NetLayer {
      * @return
      */
     public abstract boolean validate(byte[] header);
-
-    /**
-     * 返回当前协议的头字节长度
-     *
-     * @return 协议的头字节长度
-     */
-    public abstract int getHeaderLength();
 }

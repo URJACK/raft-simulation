@@ -3,7 +3,7 @@ package com.sicnu.netsimu.core.net.channel;
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.EventManager;
 import com.sicnu.netsimu.core.event.MACSignalEvent;
-import com.sicnu.netsimu.core.net.driver.Driver;
+import com.sicnu.netsimu.core.net.mac.driver.Driver;
 
 import java.util.*;
 
