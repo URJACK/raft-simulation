@@ -1,5 +1,6 @@
 package com.sicnu.netsimu.core.node;
 
+import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetStack;
 import com.sicnu.netsimu.core.net.channel.Channel;
 import com.sicnu.netsimu.core.net.mac.driver.Driver;
@@ -27,7 +28,7 @@ public abstract class Node {
     /**
      * 网络栈
      */
-    protected NetStack netStack;
+    protected BasicNetStack netStack;
     /**
      * 获得MoteClass对象，通过反射方式执行函数，进而计算能耗
      */
@@ -214,7 +215,7 @@ public abstract class Node {
      *
      * @return 返回网络栈对象引用
      */
-    public NetStack getNetStack() {
+    public BasicNetStack getNetStack() {
         return netStack;
     }
 

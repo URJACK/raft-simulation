@@ -1,6 +1,6 @@
 package com.sicnu.netsimu.core.net;
 
-import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
+import com.sicnu.netsimu.core.net.mac.IEEE_802_11_MACLayer;
 import com.sicnu.netsimu.exception.ParseException;
 
 import java.util.ArrayList;
@@ -57,9 +57,4 @@ public abstract class NetStack {
      */
     public abstract void setInfo(String key, Object value) throws ParseException;
 
-    public byte[] generateMacSendingPacket(byte[] data, byte[] dstMac) throws ParseException {
-        BasicMACLayer.Header header = null;
-        header = new BasicMACLayer.Header((byte[]) getInfo("mac"), dstMac);
-        return convert(data, header);
-    }
 }

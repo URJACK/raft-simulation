@@ -1,7 +1,7 @@
 package com.sicnu.netsimu.core.net;
 
 import com.sicnu.netsimu.core.net.ip.BasicIPLayer;
-import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
+import com.sicnu.netsimu.core.net.mac.IEEE_802_11_MACLayer;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.exception.ParseException;
 
@@ -12,10 +12,10 @@ import java.util.ArrayList;
  * NetStack 的 parse() 与 convert() 本质上就是不断调用 NetLayer的 同名函数
  *
  * @see NetLayer
- * @see BasicMACLayer
+ * @see IEEE_802_11_MACLayer
  */
 public class BasicNetStack extends NetStack {
-    BasicMACLayer macLayer;
+    IEEE_802_11_MACLayer macLayer;
     BasicIPLayer ipLayer;
     int stackHeaderLength;
 
@@ -25,20 +25,20 @@ public class BasicNetStack extends NetStack {
      * @param macAddress 当前设备的MAC地址
      */
     public BasicNetStack(byte[] macAddress) {
-        macLayer = new BasicMACLayer(macAddress);
+        macLayer = new IEEE_802_11_MACLayer(macAddress);
         ipLayer = new BasicIPLayer();
-        stackHeaderLength = BasicMACLayer.Header.length + BasicIPLayer.Header.length;
+        stackHeaderLength = IEEE_802_11_MACLayer.Header.HEADER_LENGTH + BasicIPLayer.Header.length;
     }
 
     /**
-     * 网络栈将传入的各类Header和数据转换成可以传输的字符串
+     * 网络栈将传入的各类Header和数据转换成可以传输的字节对象
      * <pre>
-     *     stack.parse(new MACLayer.Header(...),new IPLayer.Header(...),data)
+     *     return convert(data, macHeader, ipHeader);
      * </pre>
      *
      * @param value 要传输的应用层数据内容
      * @param args  Header与传输的数据
-     * @return 可传输字符串
+     * @return 可传输字节对象
      */
     @Override
     public byte[] convert(byte[] value, NetField... args) {
@@ -69,13 +69,13 @@ public class BasicNetStack extends NetStack {
             return null;
         }
         // mac层头信息的对应数组
-        byte[] macHeaderBytes = new byte[BasicMACLayer.Header.length];
+        byte[] macHeaderBytes = new byte[IEEE_802_11_MACLayer.Header.HEADER_LENGTH];
         // 开除mac层头信息后的信息长度，并以该长度创建对应数组
-        int valueLength = packet.length - BasicMACLayer.Header.length;
+        int valueLength = packet.length - IEEE_802_11_MACLayer.Header.HEADER_LENGTH;
         byte[] value = new byte[valueLength];
         // 将内容分别塞入这些部分
-        System.arraycopy(packet, 0, macHeaderBytes, 0, BasicMACLayer.Header.length);
-        System.arraycopy(packet, BasicMACLayer.Header.length, value, 0, valueLength);
+        System.arraycopy(packet, 0, macHeaderBytes, 0, IEEE_802_11_MACLayer.Header.HEADER_LENGTH);
+        System.arraycopy(packet, IEEE_802_11_MACLayer.Header.HEADER_LENGTH, value, 0, valueLength);
         try {
             ArrayList<NetField> ans = new ArrayList<>(2);
             if (!macLayer.validate(macHeaderBytes)) {
@@ -134,5 +134,10 @@ public class BasicNetStack extends NetStack {
             }
             default -> new Exception("Error Init Mote Info with key:" + key).printStackTrace();
         }
+    }
+
+    public byte[] generateMacSendingPacket(byte[] data, byte[] dstMac) throws ParseException {
+        IEEE_802_11_MACLayer.Header header = IEEE_802_11_MACLayer.Header.Builder.createDataPacket(dstMac, macLayer.getMacAddress());
+        return convert(data, header);
     }
 }

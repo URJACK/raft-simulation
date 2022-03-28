@@ -48,7 +48,7 @@ public class TestNodeA extends Node {
             public void work() {
 //                call("print", "我是节点");
                 // 间歇性 发送数据包
-                NetStack stack = getNetStack();
+                BasicNetStack stack = getNetStack();
 //                byte[] dstMac = BasicMACLayer.BROAD_CAST;
                 byte[] dstMac = new byte[0];
                 try {

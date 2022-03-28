@@ -4,7 +4,7 @@ import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.node.NodeManager;
 import com.sicnu.netsimu.core.net.NetStack;
-import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
+import com.sicnu.netsimu.core.net.mac.IEEE_802_11_MACLayer;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.exception.ParseException;
 import lombok.Data;
@@ -57,12 +57,8 @@ public class NetSendCommand extends Command {
         Node node = nodeManager.getMote(nodeId);
         NetStack netStack = node.getNetStack();
 //        mote.netSend(new TransmissionPacket(srcIp, dstIp, srcPort, dstPort, value));
-        try {
-            BasicMACLayer.Header header = new BasicMACLayer.Header((byte[]) netStack.getInfo("mac"), dstMac);
+        IEEE_802_11_MACLayer.Header header = IEEE_802_11_MACLayer.Header.Builder.createDataPacket(dstMac, (byte[]) netStack.getInfo("mac"));
 //            mote.call("netSend", (Object) netStack.convert(value, header));
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
     }
 
 }

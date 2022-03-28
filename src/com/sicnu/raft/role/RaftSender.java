@@ -1,7 +1,8 @@
 package com.sicnu.raft.role;
 
+import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetStack;
-import com.sicnu.netsimu.core.net.mac.BasicMACLayer;
+import com.sicnu.netsimu.core.net.mac.IEEE_802_11_MACLayer;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.exception.ParseException;
 import com.sicnu.raft.node.RaftNode;
@@ -35,8 +36,8 @@ public class RaftSender {
      * @param rpc 实现了RPC对象转换接口的对象
      */
     public void broadCast(RPCConvert rpc) {
-        NetStack stack = mote.getNetStack();
-        byte[] dstMac = BasicMACLayer.BROAD_CAST;
+        BasicNetStack stack = mote.getNetStack();
+        byte[] dstMac = IEEE_802_11_MACLayer.BROAD_CAST;
         try {
             byte[] packet = stack.generateMacSendingPacket(rpc.convert().getBytes(), dstMac);
             mote.netSend(packet);
@@ -54,7 +55,7 @@ public class RaftSender {
      * @param rpc       要发送的RPC对象
      */
     public void uniCast(int desMoteId, RPCConvert rpc) {
-        NetStack stack = mote.getNetStack();
+        BasicNetStack stack = mote.getNetStack();
         try {
             byte[] dstMac = MoteCalculate.convertMACAddressWithMoteId(RaftNode.MAC_PREFIX, desMoteId);
             byte[] packet = stack.generateMacSendingPacket(rpc.convert().getBytes(), dstMac);

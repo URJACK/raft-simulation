@@ -9,7 +9,7 @@ import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 import java.util.Deque;
 import java.util.LinkedList;
 
-public class IEEE_802_11_B_Driver extends Driver {
+public class IEEE_802_11_B_Driver_ACK extends Driver {
     private static int S_IFS = 10;          // us
     private static int P_IFS = 30;          // us
     private static int D_IFS = 50;          // us
@@ -27,7 +27,7 @@ public class IEEE_802_11_B_Driver extends Driver {
      * @param dataBitRate      the dataBitRate, in per microseconds
      * @param physicalTimeCost the physical transmission time cost, in microseconds
      */
-    public IEEE_802_11_B_Driver(NetSimulator simulator, Node node, Channel channel, float dataBitRate, float physicalTimeCost) {
+    public IEEE_802_11_B_Driver_ACK(NetSimulator simulator, Node node, Channel channel, float dataBitRate, float physicalTimeCost) {
         super(simulator, node, channel, dataBitRate, physicalTimeCost);
         sendingLogic = new SendingLogic();
         backoffLogic = new BackoffLogic();
@@ -59,8 +59,8 @@ public class IEEE_802_11_B_Driver extends Driver {
      * 1` sendData(byte[]): ready to send another packet.
      * 2` awake() -> case CACHING : after transmit a packet no matter it's success or failed.
      *
-     * @see IEEE_802_11_B_Driver#sendData(byte[])
-     * @see IEEE_802_11_B_Driver#triggerAwake()
+     * @see IEEE_802_11_B_Driver_ACK#sendData(byte[])
+     * @see IEEE_802_11_B_Driver_ACK#triggerAwake()
      */
     private void actionTrySend() {
         // clear the backoff related variables
@@ -192,9 +192,9 @@ public class IEEE_802_11_B_Driver extends Driver {
     public void triggerChangeIdle() {
         switch (role) {
             /**
-             * @see IEEE_802_11_B_Driver#actionSending()
-             * @see IEEE_802_11_B_Driver#actionFailed()
-             * @see IEEE_802_11_B_Driver.DriverRole#WAIT_BACKOFF
+             * @see IEEE_802_11_B_Driver_ACK#actionSending()
+             * @see IEEE_802_11_B_Driver_ACK#actionFailed()
+             * @see IEEE_802_11_B_Driver_ACK.DriverRole#WAIT_BACKOFF
              */
             case WAIT_IDLE -> {
                 role = DriverRole.WAIT_IFS;
