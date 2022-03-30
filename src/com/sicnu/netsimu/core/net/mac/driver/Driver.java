@@ -1,8 +1,8 @@
 package com.sicnu.netsimu.core.net.mac.driver;
 
 import com.sicnu.netsimu.core.NetSimulator;
-import com.sicnu.netsimu.core.net.channel.Channel;
-import com.sicnu.netsimu.core.net.channel.ChannelManager;
+import com.sicnu.netsimu.core.net.mac.channel.Channel;
+import com.sicnu.netsimu.core.net.mac.channel.ChannelManager;
 import com.sicnu.netsimu.core.node.Node;
 
 import java.util.List;
@@ -77,7 +77,7 @@ public abstract class Driver {
      *
      * @param data the data needed transmit
      */
-    void transmit(byte[] data) {
+    int transmit(byte[] data) {
 //        float rand = NetSimulationRandom.nextFloat() * physicalBeta;
 //        int costTime = (int) (physicalTimeCost * (1 + rand) + data.length / dataBitRate);
         int costTime = (int) (physicalTimeCost + data.length / dataBitRate);
@@ -85,7 +85,7 @@ public abstract class Driver {
         for (Channel connectedChannel : connectedChannels) {
             connectedChannel.pushSignal(costTime, data);
         }
-        waitWhatever(costTime);
+        return costTime;
     }
 
     /**
@@ -136,10 +136,19 @@ public abstract class Driver {
         }
     }
 
-    private void waitWhatever(int time) {
+    protected void waitWhatever(int time) {
         if (!idleSleepStatus) {
             idleSleepStatus = true;
             channel.waitWhatever(time);
+        } else {
+            new RuntimeException("can't sleep one more time while in sleeping(sending action)").printStackTrace();
+        }
+    }
+
+    protected void waitReceive(int time) {
+        if (!idleSleepStatus) {
+            idleSleepStatus = true;
+            channel.waitReceiveACK(time);
         } else {
             new RuntimeException("can't sleep one more time while in sleeping(sending action)").printStackTrace();
         }

@@ -1,7 +1,7 @@
 package com.sicnu.nettest.core.net.channel;
 
-import com.sicnu.netsimu.core.net.channel.Signal;
-import com.sicnu.netsimu.core.net.channel.Channel;
+import com.sicnu.netsimu.core.net.mac.channel.Signal;
+import com.sicnu.netsimu.core.net.mac.channel.Channel;
 
 import java.util.ArrayList;
 

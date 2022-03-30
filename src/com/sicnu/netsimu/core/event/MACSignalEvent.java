@@ -1,6 +1,6 @@
 package com.sicnu.netsimu.core.event;
 
-import com.sicnu.netsimu.core.net.channel.Channel;
+import com.sicnu.netsimu.core.net.mac.channel.Channel;
 
 public class MACSignalEvent extends Event {
     Channel channel;

@@ -2,14 +2,15 @@ package com.sicnu.netsimu.core.net.mac.driver;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
-import com.sicnu.netsimu.core.net.channel.Channel;
+import com.sicnu.netsimu.core.net.mac.channel.Channel;
+import com.sicnu.netsimu.core.net.mac.IEEE_802_11_MACLayer;
 import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 
 import java.util.Deque;
 import java.util.LinkedList;
 
-public class IEEE_802_11_B_Driver_ACK extends Driver {
+public class IEEE_802_11_B_ACK_Driver extends Driver {
     private static int S_IFS = 10;          // us
     private static int P_IFS = 30;          // us
     private static int D_IFS = 50;          // us
@@ -27,7 +28,7 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
      * @param dataBitRate      the dataBitRate, in per microseconds
      * @param physicalTimeCost the physical transmission time cost, in microseconds
      */
-    public IEEE_802_11_B_Driver_ACK(NetSimulator simulator, Node node, Channel channel, float dataBitRate, float physicalTimeCost) {
+    public IEEE_802_11_B_ACK_Driver(NetSimulator simulator, Node node, Channel channel, float dataBitRate, float physicalTimeCost) {
         super(simulator, node, channel, dataBitRate, physicalTimeCost);
         sendingLogic = new SendingLogic();
         backoffLogic = new BackoffLogic();
@@ -59,16 +60,16 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
      * 1` sendData(byte[]): ready to send another packet.
      * 2` awake() -> case CACHING : after transmit a packet no matter it's success or failed.
      *
-     * @see IEEE_802_11_B_Driver_ACK#sendData(byte[])
-     * @see IEEE_802_11_B_Driver_ACK#triggerAwake()
+     * @see IEEE_802_11_B_ACK_Driver#sendData(byte[])
+     * @see IEEE_802_11_B_ACK_Driver#triggerAwake()
      */
     private void actionTrySend() {
         // clear the backoff related variables
-        backoffLogic.clear();
+        backoffLogic.clearBackoff();
 //        role = DriverRole.CACHING;
         if (channel.isBusy()) {
-            role = DriverRole.WAIT_IDLE;
-            backoffLogic.detectBusyAndBackOff();
+            role = DriverRole.IN_BUSY;
+            backoffLogic.startBackoffCount();
             waitUntilIdle();
             // it will trigger changeIdle()
         } else {
@@ -87,11 +88,20 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
      * and get into a status CACHING
      */
     private void actionSending() {
-        role = DriverRole.CACHING;
-        byte[] packet = sendingLogic.peek();
-        sendingLogic.activateSending();
-        // sending the packet
-        transmit(packet);
+        if (sendingLogic.getBufferSize() > 0) {
+            byte[] packet = sendingLogic.peek();
+            int costTime = transmit(packet);
+            if (IEEE_802_11_MACLayer.Header.isBroadCastPacket(packet)) {
+                waitWhatever(costTime);
+                role = DriverRole.WAIT_M_SENDING;
+            } else {
+                sendingLogic.recordRecordACKInfo(packet);
+                waitReceive(costTime);
+                role = DriverRole.WAIT_U_SENDING;
+            }
+        } else {
+            role = DriverRole.FREE;
+        }
     }
 
     /**
@@ -102,7 +112,6 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
      * this function will get into a status CACHING
      */
     private void actionFailed() {
-        role = DriverRole.CACHING;
         /*
          it won't trigger this status,
          so don't need sendingLogic.clearActivateSending();
@@ -116,7 +125,9 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
         if (sendingLogic.getBufferSize() == 0) {
             role = DriverRole.FREE;
         } else {
-            actionTrySend();
+            backoffLogic.clearBackoff();
+            backoffLogic.startBackoffCount();
+            tryToGoBackoff();
         }
     }
 
@@ -125,19 +136,7 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
         switch (role) {
             case WAIT_IFS -> {
                 // this will trigger the sending
-                if (backoffLogic.isInBackOff()) {
-                    if (backoffLogic.overFailed()) {
-                        actionFailed();
-                    } else {
-                        role = DriverRole.WAIT_BACKOFF;
-                        backoffLogic.triggerTimeRecord();
-                        waitInIdle(backoffLogic.getLeftBackoffLeftTime());
-                    }
-                } else {
-                    // role = DriverRole.ACTION_SENDING;
-                    // role from WAIT_IFS -> CACHING
-                    actionSending();
-                }
+                tryToGoBackoff();
             }
             case WAIT_BACKOFF -> {
                 backoffLogic.triggerTimeRefresh();
@@ -146,35 +145,44 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
                 }
                 actionSending();
             }
-            case CACHING -> {
+            case WAIT_M_SENDING -> {
                 // actionSending() will use sendingLogic.activateSending()
-                sendingLogic.clearActivateSending();
+//                sendingLogic.clearActivateSending();
                 sendingResultBack(true);
+            }
+            case WAIT_U_SENDING -> {
+                sendingLogic.clearRecordACKInfo();
+                backoffLogic.startBackoffCount();
+                tryToGoBackoff();
+                // tryToGoBackoff will judge that if it is overFailed?
+//                if (backoffLogic.overFailed()) {
+//                    actionFailed();
+//                }
             }
         }
     }
 
     @Override
     protected void changeBusy() {
-        // if in the following status, shall we be in the ACTION_SENDING ?
-        if (sendingLogic.isSending()) {
-            // if the driver is sending, it will not trigger anything
-            return;
-        }
+//        // if in the following status, shall we be in the ACTION_SENDING ?
+//        if (sendingLogic.isSending()) {
+//            // if the driver is sending, it will not trigger anything
+//            return;
+//        }
         switch (role) {
             case WAIT_IFS -> {
                 // ready to send a packet
-                role = DriverRole.WAIT_IDLE;
+                role = DriverRole.IN_BUSY;
                 // if it has already in the backoff status,
                 // while it detected the busy channel, it just needed to go back to WAIT_IDLE again.
                 if (!backoffLogic.isInBackOff()) {
                     // if it is not in backoff status,
                     // it will trigger the backoff operation and set leftTime.
-                    backoffLogic.detectBusyAndBackOff();
+                    backoffLogic.startBackoffCount();
                 }
             }
             case WAIT_BACKOFF -> {
-                role = DriverRole.WAIT_IDLE;
+                role = DriverRole.IN_BUSY;
                 // while in the action backoff,
                 // it will stop the backoff time counting.
                 backoffLogic.triggerTimeRefresh();
@@ -192,11 +200,11 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
     public void triggerChangeIdle() {
         switch (role) {
             /**
-             * @see IEEE_802_11_B_Driver_ACK#actionSending()
-             * @see IEEE_802_11_B_Driver_ACK#actionFailed()
-             * @see IEEE_802_11_B_Driver_ACK.DriverRole#WAIT_BACKOFF
+             * @see IEEE_802_11_B_ACK_Driver#actionSending()
+             * @see IEEE_802_11_B_ACK_Driver#actionFailed()
+             * @see IEEE_802_11_B_ACK_Driver.DriverRole#WAIT_BACKOFF
              */
-            case WAIT_IDLE -> {
+            case IN_BUSY -> {
                 role = DriverRole.WAIT_IFS;
                 // wait for a D_IFS time.
                 waitInIdle(D_IFS);
@@ -205,21 +213,55 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
         }
     }
 
+    private void tryToGoBackoff() {
+        if (backoffLogic.overFailed()) {
+            actionFailed();
+        } else if (!channel.isBusy()) {
+            role = DriverRole.IN_BUSY;
+            waitUntilIdle();
+        } else {
+            if (backoffLogic.isInBackOff()) {
+                role = DriverRole.WAIT_BACKOFF;
+                backoffLogic.triggerTimeRecord();
+                waitInIdle(backoffLogic.getLeftBackoffLeftTime());
+            } else {
+                // role = DriverRole.ACTION_SENDING;
+                // role from WAIT_IFS -> CACHING
+                actionSending();
+            }
+        }
+    }
+
     /**
-     * receive a data packet with a channel
+     * receive a packet with a channel
      *
-     * @param data the data packet
+     * @param packet the data packet
      */
     @Override
-    public void callbackReceive(byte[] data) {
-        // 链路层驱动，读取到数据包，创建一个传输事件，返回给上层进行调用
-        NetSimulator simulator = channelManager.getSimulator();
-        TransmissionEvent event = new TransmissionEvent(simulator.getTime(), this.node, data);
-        simulator.getEventManager().pushEvent(event);
+    public void callbackReceive(byte[] packet) {
+        if (IEEE_802_11_MACLayer.Header.isACKPacket(packet)) {
+            // Link layer driver, reads the "ack packet"
+            if (sendingLogic.checkRecordACKInfo(packet)) {
+                // to check is this ACK is reply to me
+                sendingLogic.clearRecordACKInfo();
+                sendingResultBack(true);
+            }
+        } else {
+            // Link layer driver, reads the "data packet"
+            transmit(sendingLogic.generateACKPacket(packet));
+            // check the data Frame is duplicated
+            if (sendingLogic.checkDataPacketDuplicated(packet)) {
+                return;
+            }
+            // if the data Frame is not duplicated, it will return to the upper layer for calling
+            NetSimulator simulator = channelManager.getSimulator();
+            TransmissionEvent event = new TransmissionEvent(simulator.getTime(), this.node, packet);
+            simulator.getEventManager().pushEvent(event);
+        }
     }
 
     public enum DriverRole {
-        FREE, CACHING, WAIT_IDLE, WAIT_IFS, WAIT_BACKOFF, ACTION_FAILED, ACTION_SENDING
+        FREE, IN_BUSY, WAIT_M_SENDING, WAIT_U_SENDING, WAIT_IFS, WAIT_BACKOFF
     }
 
     private class BackoffLogic {
@@ -230,10 +272,10 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
         long recordTime;
 
         public BackoffLogic() {
-            clear();
+            clearBackoff();
         }
 
-        private void clear() {
+        private void clearBackoff() {
             backoffLeft = 0;
             backoffCount = 0;
         }
@@ -241,7 +283,7 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
         /**
          * call this function while in (CACHING \ WAIT_IFS);
          */
-        public void detectBusyAndBackOff() {
+        public void startBackoffCount() {
             backoffLeft = calculateTime(backoffCount);
             backoffCount++;
 //            System.out.println("DEBUG BACKOFF count:" + backoffCount + " left:" + backoffLeft + " nodeId:" + node.getNodeId());
@@ -290,7 +332,8 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
          * until sending success or sending failure.
          */
         Deque<byte[]> sendingBuffer;
-        private boolean sending;
+        byte[] sendingPacket;
+//        private boolean sending;
 
         public SendingLogic() {
             sendingBuffer = new LinkedList<>();
@@ -312,16 +355,42 @@ public class IEEE_802_11_B_Driver_ACK extends Driver {
             return sendingBuffer.size();
         }
 
-        public void activateSending() {
-            sending = true;
+        /**
+         * record the data packet(uni-cast packet),
+         * to check if the sender of the packet received later matches.
+         *
+         * @param packet data-packet
+         */
+        public void recordRecordACKInfo(byte[] packet) {
+            sendingPacket = packet;
         }
 
-        public void clearActivateSending() {
-            sending = false;
+        public boolean checkRecordACKInfo(byte[] packet) {
+            return false;
         }
 
-        public boolean isSending() {
-            return sending;
+        public void clearRecordACKInfo() {
+            sendingPacket = null;
         }
+
+        public byte[] generateACKPacket(byte[] packet) {
+            return IEEE_802_11_MACLayer.Header.Builder.buildACKPacket(packet);
+        }
+
+        public boolean checkDataPacketDuplicated(byte[] packet) {
+
+        }
+
+//        public void activateSending() {
+//            sending = true;
+//        }
+//
+//        public void clearActivateSending() {
+//            sending = false;
+//        }
+//
+//        public boolean isSending() {
+//            return sending;
+//        }
     }
 }

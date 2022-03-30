@@ -6,7 +6,7 @@ import com.sicnu.netsimu.core.event.Event;
 import com.sicnu.netsimu.core.event.EventInterceptor;
 import com.sicnu.netsimu.core.event.EventManager;
 import com.sicnu.netsimu.core.net.TransmissionManager;
-import com.sicnu.netsimu.core.net.channel.ChannelManager;
+import com.sicnu.netsimu.core.net.mac.channel.ChannelManager;
 import com.sicnu.netsimu.core.node.NodeManager;
 import com.sicnu.netsimu.ui.InfoOutputManager;
 import com.sicnu.netsimu.ui.summary.Summarizer;

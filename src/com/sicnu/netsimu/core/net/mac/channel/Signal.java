@@ -1,6 +1,5 @@
-package com.sicnu.netsimu.core.net.channel;
+package com.sicnu.netsimu.core.net.mac.channel;
 
-import com.sicnu.netsimu.core.event.Event;
 import com.sicnu.netsimu.core.event.MACSignalEvent;
 
 public class Signal implements Comparable<Signal> {

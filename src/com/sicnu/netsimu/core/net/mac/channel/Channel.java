@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.core.net.channel;
+package com.sicnu.netsimu.core.net.mac.channel;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.EventManager;
@@ -44,6 +44,10 @@ public class Channel {
      * @see Channel#macEventEndingHandler(MACSignalEvent)
      */
     Signal sleepSignal = null;
+    /**
+     * the response signal
+     */
+    Signal receiveSignal = null;
 
     public Channel(NetSimulator simulator) {
         this.eventManager = simulator.getEventManager();
@@ -134,7 +138,7 @@ public class Channel {
         } else {
             // if this is a virtual event trigger
             sleepSignal = null;
-//            driver.awake();
+            receiveSignal = null;
             driver.triggerAwake();
         }
     }
@@ -187,5 +191,30 @@ public class Channel {
         // changeBusy() could be triggered normally during this span.
         // so if we want to implement the sending logic,
         // there must be extra codes in Driver.
+    }
+
+    public void waitReceiveACK(int time) {
+        if (receiveSignal != null) {
+            throw new RuntimeException("a node can't sleep(sending operation) while the channel is busy");
+        }
+        NetSimulator simulator = channelManager.getSimulator();
+        EventManager eventManager = simulator.getEventManager();
+        long endTime = simulator.getTime() + time;
+        MACSignalEvent macSleepEvent = new MACSignalEvent(endTime, this, true);
+        eventManager.pushEvent(macSleepEvent);
+        // signal connected
+        receiveSignal = new Signal(simulator.getTime(), endTime, null, macSleepEvent);
+    }
+
+    /**
+     * while "sender STA" received the ACK frame from the "receiver STA",
+     * it should call this function to abandon the MACEvent.
+     */
+    public void clearReceiveSignal() {
+        if (receiveSignal == null) {
+            return;
+        }
+        receiveSignal.event.setAbandoned(true);
+        receiveSignal = null;
     }
 }

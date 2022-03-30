@@ -2,7 +2,7 @@ package com.sicnu.netsimu.core.net.mac.driver;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TransmissionEvent;
-import com.sicnu.netsimu.core.net.channel.Channel;
+import com.sicnu.netsimu.core.net.mac.channel.Channel;
 import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 
@@ -91,7 +91,8 @@ public class IEEE_802_11_B_Driver extends Driver {
         byte[] packet = sendingLogic.peek();
         sendingLogic.activateSending();
         // sending the packet
-        transmit(packet);
+        int costTime = transmit(packet);
+        waitWhatever(costTime);
     }
 
     /**

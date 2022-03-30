@@ -1,4 +1,4 @@
-package com.sicnu.netsimu.core.net.channel;
+package com.sicnu.netsimu.core.net.mac.channel;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.net.TransmissionManager;

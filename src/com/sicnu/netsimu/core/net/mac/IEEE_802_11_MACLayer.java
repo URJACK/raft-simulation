@@ -142,6 +142,10 @@ public class IEEE_802_11_MACLayer extends NetLayer {
             System.arraycopy(headerPacket, 24, Address4, 0, 6);
         }
 
+        public static boolean isACKPacket(byte[] data) {
+            return false;
+        }
+
         /**
          * {isACK(1bit),srcAddress(6bit),dstAddress(6bit)}
          *
@@ -173,6 +177,12 @@ public class IEEE_802_11_MACLayer extends NetLayer {
 
         public byte[] getDes() {
             return Address1;
+        }
+
+        public static boolean isBroadCastPacket(byte[] packet) {
+            byte[] desAddress = new byte[6];
+            System.arraycopy(packet, 4, desAddress, 0, 6);
+            return Arrays.equals(desAddress, BROAD_CAST);
         }
 
         public static class Builder {
@@ -208,6 +218,23 @@ public class IEEE_802_11_MACLayer extends NetLayer {
                 System.arraycopy(dstMac, 0, header.Address1, 0, 6);
                 System.arraycopy(srcMac, 0, header.Address2, 0, 6);
                 return header;
+            }
+
+            public static void extractDstAddress(byte[] packet, byte[] target) {
+                System.arraycopy(packet, 4, target, 0, 6);
+            }
+
+            public static void extractSrcAddress(byte[] packet, byte[] target) {
+                System.arraycopy(packet, 10, target, 0, 6);
+            }
+
+            public static byte[] buildACKPacket(byte[] packet) {
+                byte[] senderPacket = new byte[6];
+                byte[] selfPacket = new byte[6];
+                extractSrcAddress(packet, senderPacket);
+                extractDstAddress(packet, selfPacket);
+                Header data = createAckPacket(senderPacket, selfPacket);
+                return data.value();
             }
         }
     }
