@@ -7,6 +7,7 @@ import com.sicnu.netsimu.core.net.mac.IEEE_802_11_MACLayer;
 import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.utils.NetSimulationRandom;
 
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.LinkedList;
 
@@ -96,7 +97,7 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
                 role = DriverRole.WAIT_M_SENDING;
             } else {
                 sendingLogic.recordRecordACKInfo(packet);
-                waitReceive(costTime);
+                waitReceive(S_IFS);
                 role = DriverRole.WAIT_U_SENDING;
             }
         } else {
@@ -151,6 +152,9 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
                 sendingResultBack(true);
             }
             case WAIT_U_SENDING -> {
+//                if (node.getNodeId() == 2) {
+//                    System.out.println("DEBUG awake U_SENDING  clear ACKInfo at: " + node.getSimulator().getTime());
+//                }
                 sendingLogic.clearRecordACKInfo();
                 backoffLogic.startBackoffCount();
                 tryToGoBackoff();
@@ -216,7 +220,7 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
     private void tryToGoBackoff() {
         if (backoffLogic.overFailed()) {
             actionFailed();
-        } else if (!channel.isBusy()) {
+        } else if (channel.isBusy()) {
             role = DriverRole.IN_BUSY;
             waitUntilIdle();
         } else {
@@ -239,7 +243,10 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
      */
     @Override
     public void callbackReceive(byte[] packet) {
-        if (IEEE_802_11_MACLayer.Header.isACKPacket(packet)) {
+        if (IEEE_802_11_MACLayer.Header.Builder.isACKPacket(packet)) {
+//            if (node.getNodeId() == 2) {
+//                System.out.println("DEBUG callbackReceive check ACKInfo at " + node.getSimulator().getTime());
+//            }
             // Link layer driver, reads the "ack packet"
             if (sendingLogic.checkRecordACKInfo(packet)) {
                 // to check is this ACK is reply to me
@@ -248,9 +255,12 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
             }
         } else {
             // Link layer driver, reads the "data packet"
+            if (!sendingLogic.couldReceiveThePacket(packet)) {
+                return;
+            }
             transmit(sendingLogic.generateACKPacket(packet));
             // check the data Frame is duplicated
-            if (sendingLogic.checkDataPacketDuplicated(packet)) {
+            if (sendingLogic.isDataPacketDuplicated(packet)) {
                 return;
             }
             // if the data Frame is not duplicated, it will return to the upper layer for calling
@@ -286,7 +296,6 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
         public void startBackoffCount() {
             backoffLeft = calculateTime(backoffCount);
             backoffCount++;
-//            System.out.println("DEBUG BACKOFF count:" + backoffCount + " left:" + backoffLeft + " nodeId:" + node.getNodeId());
         }
 
         /**
@@ -324,7 +333,7 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
         }
     }
 
-    private static class SendingLogic {
+    private class SendingLogic {
 
         /**
          * the sending buffer,
@@ -333,7 +342,6 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
          */
         Deque<byte[]> sendingBuffer;
         byte[] sendingPacket;
-//        private boolean sending;
 
         public SendingLogic() {
             sendingBuffer = new LinkedList<>();
@@ -366,7 +374,14 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
         }
 
         public boolean checkRecordACKInfo(byte[] packet) {
-            return false;
+            if (sendingPacket == null) {
+                return false;
+            }
+            byte[] recordTarget = new byte[6];
+            byte[] thisTarget = new byte[6];
+            IEEE_802_11_MACLayer.Header.Builder.extractDstAddress(sendingPacket, recordTarget);
+            IEEE_802_11_MACLayer.Header.Builder.extractSrcAddress(packet, thisTarget);
+            return Arrays.equals(recordTarget, thisTarget);
         }
 
         public void clearRecordACKInfo() {
@@ -374,23 +389,31 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
         }
 
         public byte[] generateACKPacket(byte[] packet) {
-            return IEEE_802_11_MACLayer.Header.Builder.buildACKPacket(packet);
+            byte[] senderPacket = new byte[6];
+            byte[] selfPacket = new byte[6];
+            byte[] sc = new byte[2];
+            IEEE_802_11_MACLayer.Header.Builder.extractDstAddress(packet, selfPacket);
+            IEEE_802_11_MACLayer.Header.Builder.extractSrcAddress(packet, senderPacket);
+            IEEE_802_11_MACLayer.Header.Builder.extractSequence(packet, sc);
+            IEEE_802_11_MACLayer.Header data = IEEE_802_11_MACLayer.Header.Builder.createAckPacketHeader(senderPacket, selfPacket, sc);
+            return data.value();
         }
 
-        public boolean checkDataPacketDuplicated(byte[] packet) {
-
+        /**
+         * this function didn't finish completely
+         *
+         * @param packet the received packet
+         * @return is this packet duplicated?
+         */
+        public boolean isDataPacketDuplicated(byte[] packet) {
+            return node.getNetStack().getMacLayer().isDataPacketDuplicated(packet);
         }
 
-//        public void activateSending() {
-//            sending = true;
-//        }
-//
-//        public void clearActivateSending() {
-//            sending = false;
-//        }
-//
-//        public boolean isSending() {
-//            return sending;
-//        }
+        public boolean couldReceiveThePacket(byte[] packet) {
+            byte[] packetDst = new byte[6];
+            IEEE_802_11_MACLayer.Header.Builder.extractDstAddress(packet, packetDst);
+            byte[] selfMacAddress = node.getNetStack().getMacAddress();
+            return Arrays.equals(IEEE_802_11_MACLayer.BROAD_CAST, packetDst) || Arrays.equals(selfMacAddress, packetDst);
+        }
     }
 }

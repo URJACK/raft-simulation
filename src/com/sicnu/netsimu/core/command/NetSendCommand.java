@@ -57,7 +57,7 @@ public class NetSendCommand extends Command {
         Node node = nodeManager.getMote(nodeId);
         NetStack netStack = node.getNetStack();
 //        mote.netSend(new TransmissionPacket(srcIp, dstIp, srcPort, dstPort, value));
-        IEEE_802_11_MACLayer.Header header = IEEE_802_11_MACLayer.Header.Builder.createDataPacket(dstMac, (byte[]) netStack.getInfo("mac"));
+        IEEE_802_11_MACLayer.Header header = IEEE_802_11_MACLayer.Header.Builder.createDataPacketHeader(dstMac, (byte[]) netStack.getInfo("mac"));
 //            mote.call("netSend", (Object) netStack.convert(value, header));
     }
 

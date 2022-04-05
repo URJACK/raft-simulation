@@ -76,7 +76,7 @@ public class TestNodeA extends Node {
             return;
         }
 //        call("print", new String(netFields.get(1).value()));
-        System.out.println(new String(netFields.get(1).value()) + " " + simulator.getTime());
+        call("print", new String(netFields.get(1).value()) + " " + simulator.getTime());
     }
 
     /**

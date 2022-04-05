@@ -136,8 +136,17 @@ public class BasicNetStack extends NetStack {
         }
     }
 
+    public byte[] getMacAddress() {
+        return macLayer.getMacAddress();
+    }
+
     public byte[] generateMacSendingPacket(byte[] data, byte[] dstMac) throws ParseException {
-        IEEE_802_11_MACLayer.Header header = IEEE_802_11_MACLayer.Header.Builder.createDataPacket(dstMac, macLayer.getMacAddress());
+//        IEEE_802_11_MACLayer.Header header = IEEE_802_11_MACLayer.Header.Builder.createDataPacketHeader(dstMac, macLayer.getMacAddress());
+        IEEE_802_11_MACLayer.Header header = macLayer.createDataPacketHeader(dstMac);
         return convert(data, header);
+    }
+
+    public IEEE_802_11_MACLayer getMacLayer() {
+        return macLayer;
     }
 }
