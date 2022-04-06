@@ -56,8 +56,8 @@ public abstract class Node {
         // 每个节点持有的一个信道对象
         Channel channel = new Channel(simulator);
         // 其中 t_{phys} = 192_{us} ，而 r_{data} = 11 Mbps = 11 000 000 b p s == 11 b p us。
-//        this.driver = new IEEE_802_11_B_ACK_Driver(simulator, this, channel, 11, 1);
-        this.driver = new IEEE_802_11_B_Driver(simulator, this, channel, 11, 1);
+        this.driver = new IEEE_802_11_B_ACK_Driver(simulator, this, channel, 11, 1);
+//        this.driver = new IEEE_802_11_B_Driver(simulator, this, channel, 11, 1);
         channel.setDriver(this.driver);
         energyStatistician = new EnergyStatistician(this);
         this.moteClass = moteClass;

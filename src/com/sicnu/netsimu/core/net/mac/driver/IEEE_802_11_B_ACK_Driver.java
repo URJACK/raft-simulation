@@ -128,7 +128,7 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
         } else {
             backoffLogic.clearBackoff();
             backoffLogic.startBackoffCount();
-            tryToGoBackoff();
+            backoffOrSending();
         }
     }
 
@@ -137,12 +137,13 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
         switch (role) {
             case WAIT_IFS -> {
                 // this will trigger the sending
-                tryToGoBackoff();
+                backoffOrSending();
             }
             case WAIT_BACKOFF -> {
                 backoffLogic.triggerTimeRefresh();
                 if (backoffLogic.getLeftBackoffLeftTime() != 0) {
-                    new RuntimeException("while the sending, the left Time is not equal to zero.").printStackTrace();
+                    String bugInfo = "wake up BUG INFO :" + node.getSimulator().getTime() + " " + node.getNodeId() + " " + backoffLogic.getLeftBackoffLeftTime();
+                    new RuntimeException("while the sending, the left Time is not equal to zero. " + bugInfo).printStackTrace();
                 }
                 actionSending();
             }
@@ -152,12 +153,9 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
                 sendingResultBack(true);
             }
             case WAIT_U_SENDING -> {
-//                if (node.getNodeId() == 2) {
-//                    System.out.println("DEBUG awake U_SENDING  clear ACKInfo at: " + node.getSimulator().getTime());
-//                }
                 sendingLogic.clearRecordACKInfo();
                 backoffLogic.startBackoffCount();
-                tryToGoBackoff();
+                backoffOrSending();
                 // tryToGoBackoff will judge that if it is overFailed?
 //                if (backoffLogic.overFailed()) {
 //                    actionFailed();
@@ -217,11 +215,17 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
         }
     }
 
-    private void tryToGoBackoff() {
+    private void backoffOrSending() {
         if (backoffLogic.overFailed()) {
             actionFailed();
         } else if (channel.isBusy()) {
             role = DriverRole.IN_BUSY;
+            // these following code will always be nonsense
+            // if WAIT_IFS triggered this, the channel can't be busy
+            // if sendingResultBack triggered this, it has startBackoffCount() before
+//            if (!backoffLogic.isInBackOff()) {
+//                backoffLogic.startBackoffCount();
+//            }
             waitUntilIdle();
         } else {
             if (backoffLogic.isInBackOff()) {
@@ -244,9 +248,6 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
     @Override
     public void callbackReceive(byte[] packet) {
         if (IEEE_802_11_MACLayer.Header.Builder.isACKPacket(packet)) {
-//            if (node.getNodeId() == 2) {
-//                System.out.println("DEBUG callbackReceive check ACKInfo at " + node.getSimulator().getTime());
-//            }
             // Link layer driver, reads the "ack packet"
             if (sendingLogic.checkRecordACKInfo(packet)) {
                 // to check is this ACK is reply to me
@@ -385,6 +386,7 @@ public class IEEE_802_11_B_ACK_Driver extends Driver {
         }
 
         public void clearRecordACKInfo() {
+            channel.clearReceiveSignal();
             sendingPacket = null;
         }
 

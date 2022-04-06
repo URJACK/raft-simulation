@@ -100,7 +100,7 @@ public class RaftNode extends Node {
             new ParseException("NetStack init error, no suitable macAddress").printStackTrace();
             return;
         }
-        this.netStack = new BasicNetStack(macAddress);
+        this.netStack = new BasicNetStack(this, macAddress);
     }
 
     /**

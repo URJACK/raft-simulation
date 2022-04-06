@@ -2,6 +2,7 @@ package com.sicnu.netsimu.core.net;
 
 import com.sicnu.netsimu.core.net.ip.BasicIPLayer;
 import com.sicnu.netsimu.core.net.mac.IEEE_802_11_MACLayer;
+import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.exception.ParseException;
 
@@ -18,14 +19,16 @@ public class BasicNetStack extends NetStack {
     IEEE_802_11_MACLayer macLayer;
     BasicIPLayer ipLayer;
     int stackHeaderLength;
+    public Node node;
 
     /**
      * 基础网络栈构造函数
      *
      * @param macAddress 当前设备的MAC地址
      */
-    public BasicNetStack(byte[] macAddress) {
-        macLayer = new IEEE_802_11_MACLayer(macAddress);
+    public BasicNetStack(Node node, byte[] macAddress) {
+        this.node = node;
+        macLayer = new IEEE_802_11_MACLayer(this, macAddress);
         ipLayer = new BasicIPLayer();
         stackHeaderLength = IEEE_802_11_MACLayer.Header.HEADER_LENGTH + BasicIPLayer.Header.length;
     }

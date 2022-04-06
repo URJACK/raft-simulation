@@ -2,6 +2,7 @@ package com.test.testpk;
 
 import com.sicnu.netsimu.core.NetSimulator;
 import com.sicnu.netsimu.core.event.TimeoutEvent;
+import com.sicnu.netsimu.core.net.mac.IEEE_802_11_MACLayer;
 import com.sicnu.netsimu.core.node.Node;
 import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetField;
@@ -11,6 +12,9 @@ import com.sicnu.netsimu.core.utils.MoteCalculate;
 import com.sicnu.netsimu.exception.ParseException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 /**
  * 基础节点
@@ -58,6 +62,14 @@ public class TestNodeA extends Node {
                     byte[] packet;
                     dstMac = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, 1);
                     packet = stack.generateMacSendingPacket(("I'm " + moteId + " seq:" + sendCount++ + " time:" + simulator.getTime()).getBytes(), dstMac);
+//                    if (getNodeId() == 30) {
+//                        System.out.println("DEBUG");
+//                    }
+//                    // DEBUG - BEGIN
+//                    byte[] scArr = new byte[2];
+//                    IEEE_802_11_MACLayer.Header.Builder.extractSequence(packet, scArr);
+//                    call("print", "send" + IEEE_802_11_MACLayer.Header.Builder.SCtoInt(scArr) + " " + String.valueOf(sendCount - 1));
+                    // DEBUG - END
                     netSend(packet);
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -75,8 +87,12 @@ public class TestNodeA extends Node {
             //不满足
             return;
         }
-//        call("print", new String(netFields.get(1).value()));
-        call("print", new String(netFields.get(1).value()) + " " + simulator.getTime());
+        call("print", new String(netFields.get(1).value()));
+//        call("print", new String(netFields.get(1).value()) + " " + simulator.getTime());
+        byte[] sc = new byte[2];
+        IEEE_802_11_MACLayer.Header.Builder.extractSequence(netFields.get(0).value(), sc);
+        int scNum = IEEE_802_11_MACLayer.Header.Builder.SCtoInt(sc);
+//        call("print", scNum + " DEBUG ");
     }
 
     /**
@@ -100,7 +116,7 @@ public class TestNodeA extends Node {
             new ParseException("NetStack init error, no suitable macAddress").printStackTrace();
             return;
         }
-        this.netStack = new BasicNetStack(macAddress);
+        this.netStack = new BasicNetStack(this, macAddress);
     }
 
     /**

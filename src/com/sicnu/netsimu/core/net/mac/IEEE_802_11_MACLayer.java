@@ -1,5 +1,6 @@
 package com.sicnu.netsimu.core.net.mac;
 
+import com.sicnu.netsimu.core.net.BasicNetStack;
 import com.sicnu.netsimu.core.net.NetField;
 import com.sicnu.netsimu.core.net.NetLayer;
 import com.sicnu.netsimu.core.node.Node;
@@ -32,13 +33,16 @@ public class IEEE_802_11_MACLayer extends NetLayer {
     HashMap<String, Integer> sequenceReceiveRecorder = new HashMap<>();
     HashMap<String, Integer> sequenceSendRecorder = new HashMap<>();
 
+    BasicNetStack stack;
+
     /**
      * 构建MAC层对象
      *
      * @param selfMacAddress MAC层地址
      */
-    public IEEE_802_11_MACLayer(byte[] selfMacAddress) {
+    public IEEE_802_11_MACLayer(BasicNetStack stack, byte[] selfMacAddress) {
         this.selfMacAddress = selfMacAddress;
+        this.stack = stack;
     }
 
     /**
@@ -144,7 +148,7 @@ public class IEEE_802_11_MACLayer extends NetLayer {
     }
 
     /**
-     * 会依据目标MAC地址，生成一个数据包头
+     * 会依据目标MAC地址，生成一个数据包头，帧序号会自动变化
      *
      * @param dstMac 目标MAC地址
      * @return 生成的数据包头信息
@@ -154,6 +158,7 @@ public class IEEE_802_11_MACLayer extends NetLayer {
         String receiverAddressString = new String(dstMac);
         Integer receiverSequence = sequenceSendRecorder.getOrDefault(receiverAddressString, 0);
         Header.Builder.SCtoByte(receiverSequence, header.SC);
+        sequenceSendRecorder.put(receiverAddressString, (receiverSequence + 1) % 4096);
         return header;
     }
 
@@ -287,12 +292,12 @@ public class IEEE_802_11_MACLayer extends NetLayer {
                 return Arrays.equals(fc, TYPE_ACK);
             }
 
-            private static void SCtoByte(int v, byte[] scArr) {
+            public static void SCtoByte(int v, byte[] scArr) {
                 scArr[1] = (byte) (v & 0xff);
                 scArr[0] = (byte) (v >> 8 & 0x0f);
             }
 
-            private static int SCtoInt(byte[] scArr) {
+            public static int SCtoInt(byte[] scArr) {
                 int ans = 0;
                 int base = 1;
                 for (int i = 0; i < 8; i++) {
