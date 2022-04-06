@@ -303,14 +303,14 @@ public class IEEE_802_11_MACLayer extends NetLayer {
                 for (int i = 0; i < 8; i++) {
                     if ((scArr[1] >> i & 1) == 1) {
                         ans += base;
-                        base *= 2;
                     }
+                    base *= 2;
                 }
                 for (int i = 0; i < 4; i++) {
                     if ((scArr[0] >> i & 1) == 1) {
                         ans += base;
-                        base *= 2;
                     }
+                    base *= 2;
                 }
                 return ans;
             }

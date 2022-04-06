@@ -62,14 +62,6 @@ public class TestNodeA extends Node {
                     byte[] packet;
                     dstMac = MoteCalculate.convertMACAddressWithMoteId(MAC_PREFIX, 1);
                     packet = stack.generateMacSendingPacket(("I'm " + moteId + " seq:" + sendCount++ + " time:" + simulator.getTime()).getBytes(), dstMac);
-//                    if (getNodeId() == 30) {
-//                        System.out.println("DEBUG");
-//                    }
-//                    // DEBUG - BEGIN
-//                    byte[] scArr = new byte[2];
-//                    IEEE_802_11_MACLayer.Header.Builder.extractSequence(packet, scArr);
-//                    call("print", "send" + IEEE_802_11_MACLayer.Header.Builder.SCtoInt(scArr) + " " + String.valueOf(sendCount - 1));
-                    // DEBUG - END
                     netSend(packet);
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -89,10 +81,6 @@ public class TestNodeA extends Node {
         }
         call("print", new String(netFields.get(1).value()));
 //        call("print", new String(netFields.get(1).value()) + " " + simulator.getTime());
-        byte[] sc = new byte[2];
-        IEEE_802_11_MACLayer.Header.Builder.extractSequence(netFields.get(0).value(), sc);
-        int scNum = IEEE_802_11_MACLayer.Header.Builder.SCtoInt(sc);
-//        call("print", scNum + " DEBUG ");
     }
 
     /**
@@ -128,7 +116,7 @@ public class TestNodeA extends Node {
     @Override
     public void netSendResult(byte[] data, boolean result) {
         if (!result) {
-            System.out.println("node:" + getNodeId() + " sending .. failed");
+            System.out.println("node:" + getNodeId() + " sending " + new String(data) + " failed");
         }
     }
 }
